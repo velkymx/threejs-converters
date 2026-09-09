@@ -13,7 +13,7 @@ expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
 echo "--- 0. --help smoke (all 19 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -276,6 +276,46 @@ if node converters/vox-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2
   fail "vox should refuse non-VOX"
 fi
 pass "vox refuses non-VOX"
+
+echo "--- 12. md2: frame picked, baked to static mesh ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: minimal real MD2 (2 frames, 1 tri) proves parse + frame bake; uint8 verts need
+// scale/translation (here 0.5) so frame0 spans 1m and frame1 spans y 1..2m
+const head = Buffer.alloc(68);
+head.writeInt32LE(844121161, 0); head.writeInt32LE(8, 4);
+head.writeInt32LE(64, 8); head.writeInt32LE(64, 12); head.writeInt32LE(52, 16);
+head.writeInt32LE(0, 20); head.writeInt32LE(3, 24); head.writeInt32LE(3, 28);
+head.writeInt32LE(1, 32); head.writeInt32LE(0, 36); head.writeInt32LE(2, 40);
+head.writeInt32LE(196, 44); head.writeInt32LE(68, 48); head.writeInt32LE(80, 52);
+head.writeInt32LE(92, 56); head.writeInt32LE(196, 60); head.writeInt32LE(196, 64);
+const st = Buffer.alloc(12);
+st.writeInt16LE(0, 0); st.writeInt16LE(0, 2); st.writeInt16LE(64, 4); st.writeInt16LE(0, 6); st.writeInt16LE(0, 8); st.writeInt16LE(64, 10);
+const tri = Buffer.alloc(12);
+tri.writeUInt16LE(0, 0); tri.writeUInt16LE(1, 2); tri.writeUInt16LE(2, 4);
+tri.writeUInt16LE(0, 6); tri.writeUInt16LE(1, 8); tri.writeUInt16LE(2, 10);
+const frame = (name, verts) => {
+  const f = Buffer.alloc(52);
+  f.writeFloatLE(0.5, 0); f.writeFloatLE(0.5, 4); f.writeFloatLE(0.5, 8);
+  f.writeFloatLE(0, 12); f.writeFloatLE(0, 16); f.writeFloatLE(0, 20);
+  f.write(name, 24, 'ascii');
+  verts.forEach((v, i) => { f.writeUInt8(v[0], 40+i*4); f.writeUInt8(v[1], 40+i*4+1); f.writeUInt8(v[2], 40+i*4+2); f.writeUInt8(0, 40+i*4+3); });
+  return f;
+};
+// stored z becomes emitted y (loader Y-ups) — frame1 floats 1m up, caught by --no-ground
+writeFileSync('$OUT/test.md2', Buffer.concat([head, st, tri, frame('frame0', [[0,0,0],[2,0,0],[0,2,0]]), frame('frame1', [[0,0,2],[2,0,2],[0,2,2]])]));
+console.log('md2 fixture ok');
+" || fail "md2 fixture"
+node converters/md2-to-glb.js "$OUT/test.md2" --out "$OUT/md2.glb" >/dev/null 2>&1
+expect_file "$OUT/md2.glb"
+node converters/gltf-report.js "$OUT/md2.glb" | grep -q "1.000 x 0.000 x 1.000" || fail "md2 frame0 size"
+node converters/md2-to-glb.js "$OUT/test.md2" --frame 1 --no-ground --no-center --out "$OUT/md2f1.glb" >/dev/null 2>&1
+node converters/gltf-report.js "$OUT/md2f1.glb" | grep -q "min.y 1.000" || fail "md2 frame1 pose"
+pass "md2 bakes picked frame"
+if node converters/md2-to-glb.js "$OUT/test.md2" --frame 9 --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "md2 should refuse bad frame"
+fi
+pass "md2 refuses bad frame"
 
 echo ""
 echo "ALL CI CHECKS PASSED"

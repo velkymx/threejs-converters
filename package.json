@@ -19,6 +19,7 @@
     "pack": "node converters/gltf-pack.js",
     "pk3": "node converters/pk3-to-dir.js",
     "md3": "node converters/md3-to-glb.js",
+    "md2": "node converters/md2-to-glb.js",
     "vox": "node converters/vox-to-glb.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
