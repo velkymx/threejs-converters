@@ -9,7 +9,7 @@
 
 ## Introduction
 
-ply-to-glb converts PLY scan finds — photogrammetry exports, MeshLab cleanups, scanner output — into three.js-ready GLB files. It parses ASCII, little-endian binary, and big-endian binary PLYs with zero dependencies: positions plus normals, UVs, and vertex colors when present, `vertex_indices` faces with n-gon fan triangulation, smooth normals computed when the file has none.
+ply-to-glb converts PLY scan finds (photogrammetry exports, MeshLab cleanups, scanner output) into three.js-ready GLB files. It parses ASCII, little-endian binary, and big-endian binary PLYs with zero dependencies: positions plus normals, UVs, and vertex colors when present, `vertex_indices` faces with n-gon fan triangulation, smooth normals computed when the file has none.
 
 Scale works like every other model converter here: units are converted to meters, then the mesh is centered on XZ and grounded on Y by default.
 
@@ -55,5 +55,5 @@ node converters/ply-to-glb.js ./assets/scan.ply --out ./assets/scan.glb --units 
 
 ## See Also
 
-- [gltf-report](gltf-report.md) — check the budget and scale verdict next.
-- [glb-optimize](glb-optimize.md) — scans are heavy; weld + quantize usually pay off.
+- [gltf-report](gltf-report.md): check the budget and scale verdict next.
+- [glb-optimize](glb-optimize.md): scans are heavy; weld + quantize usually pay off.
