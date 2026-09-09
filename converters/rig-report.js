@@ -122,7 +122,7 @@ const rigs = skins.map((s, si) => {
   for (const j of joints) { let d = 0, p = j; const seen = new Set(); while (parent.has(p) && jset.has(parent.get(p)) && !seen.has(p)) { seen.add(p); p = parent.get(p); d++; } if (d > depth) depth = d; }
   const detached = joints.filter((j) => !reachable.has(j));
   if (detached.length) warn.push(`Skin ${si}: ${detached.length}/${joints.length} joints outside scene graph (limbs freeze) → reparent under scene root.`);
-  if (!s.inverseBindMatrices) warn.push(`Skin ${si}: no inverseBindMatrices (three.js assumes identity bind; ok only if authored so) → rig-normalize writes explicit identity IBM.`);
+  if (s.inverseBindMatrices == null) warn.push(`Skin ${si}: no inverseBindMatrices (three.js assumes identity bind; ok only if authored so) → rig-normalize writes explicit identity IBM.`);
   const badScale = joints.filter((j) => {
     const sc = nodes[j]?.scale; if (!sc) return false;
     return sc.some((v) => v === 0) || !(Math.abs(sc[0]-sc[1]) < 1e-6 && Math.abs(sc[1]-sc[2]) < 1e-6);
