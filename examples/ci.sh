@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -120,6 +120,50 @@ if (Math.abs(c.u - 2/38) > 1e-9 || Math.abs(c.v - (38-20-8)/38) > 1e-9) throw ne
 console.log('atlas grid exact');
 " || fail "atlas grid"
 pass "atlas packs with exact offsets"
+
+echo "--- 4c. cubemap: hemispheres land on the right faces ---"
+node --input-type=module -e "
+import sharp from 'sharp';
+import { writeFileSync } from 'node:fs';
+// why: synthetic quadrants pin the remap — left red, right green, top row white, bottom row black
+const W = 8, H = 4, px = Buffer.alloc(W * H * 3);
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  let r = x < 4 ? 255 : 0, g = x < 4 ? 0 : 255, b = 0;
+  if (y === 0) { r = 255; g = 255; b = 255; }
+  if (y === H - 1) { r = 0; g = 0; b = 0; }
+  px.set([r, g, b], (y * W + x) * 3);
+}
+await sharp(px, { raw: { width: W, height: H, channels: 3 } }).png().toFile('$OUT/quad.png');
+// tiny flat RGBE hdr (4x2 all-red) proves the float branch end to end
+const head = Buffer.from('-Y 2 +X 4\n', 'ascii');
+const body = Buffer.alloc(4 * 2 * 4);
+for (let i = 0; i < 8; i++) { body[i*4] = 255; body[i*4+1] = 0; body[i*4+2] = 0; body[i*4+3] = 128; }
+const hdr = Buffer.concat([Buffer.from('#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n', 'ascii'), head, body]);
+writeFileSync('$OUT/red.hdr', hdr);
+" || fail "cubemap fixture"
+node converters/hdr-to-cubemap.js "$OUT/quad.png" --out-dir "$OUT/cube" --size 16 >/dev/null
+for f in px nx py ny pz nz; do [ -s "$OUT/cube/$f.png" ] || fail "missing face $f"; done
+node -e "
+const sharp = require('sharp');
+const mean = async (f) => (await sharp(f).stats()).channels.slice(0, 3).map(c => c.mean);
+(async () => {
+  const dom = async (f, ch, name) => {
+    const m = await mean('$OUT/cube/' + f + '.png');
+    if (!(m[ch] > 180 && m[(ch+1)%3] < 120 && m[(ch+2)%3] < 120)) throw new Error(name + ' wrong: ' + m.map(v=>v.toFixed(0)));
+  };
+  await dom('pz', 1, '+Z should be green');
+  await dom('nz', 0, '-Z should be red');
+  const py = await mean('$OUT/cube/py.png');
+  // why whitish not white: face corners dip toward row 1 by projection, only centers hit v=1
+  if (!(py[0] > 180 && py[1] > 180 && py[2] > 100)) throw new Error('+Y should be whitish: ' + py);
+  const ny = await mean('$OUT/cube/ny.png');
+  if (!(ny[0] < 120 && ny[1] < 120 && ny[2] < 120)) throw new Error('-Y should be black: ' + ny);
+  console.log('cubemap hemispheres exact');
+})().catch(e => { console.error(e.message); process.exit(1); });
+" || fail "cubemap faces"
+node converters/hdr-to-cubemap.js "$OUT/red.hdr" --out-dir "$OUT/cubehdr" --size 8 >/dev/null
+[ -s "$OUT/cubehdr/px.png" ] || fail "hdr branch faces"
+pass "cubemap remaps"
 
 echo "--- 5. scene tools ---"
 node converters/material-normalize.js "$OUT/cube.glb" --out "$OUT/cube.mat.glb" >/dev/null

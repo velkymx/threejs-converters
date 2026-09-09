@@ -26,6 +26,7 @@
     "usdz": "node converters/usdz-export.js",
     "draco": "node converters/draco-compress.js",
     "atlas": "node converters/texture-atlas.js",
+    "cubemap": "node converters/hdr-to-cubemap.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
