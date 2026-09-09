@@ -27,11 +27,14 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
 if (!o.in.toLowerCase().endsWith('.gltf')) { console.error('Input must be .gltf (for .glb inputs there is nothing to pack).'); process.exit(1); }
 if (!o.out) o.out = o.in.replace(/\.gltf$/i, '.glb');
 
 const base = dirname(resolve(o.in));
-const json = JSON.parse(readFileSync(o.in, 'utf8'));
+let json;
+try { json = JSON.parse(readFileSync(o.in, 'utf8')); }
+catch { console.error('Input is not valid JSON (.gltf corrupt).'); process.exit(1); }
 const dataUri = (u) => {
   const m = /^data:.*?;base64,(.*)$/s.exec(u || '');
   return m ? Buffer.from(m[1], 'base64') : null;
