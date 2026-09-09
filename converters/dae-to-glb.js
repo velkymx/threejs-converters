@@ -29,6 +29,12 @@ if (typeof globalThis.FileReader === 'undefined') {
     }
   };
 }
+// document stub: three's ImageLoader creates <img> while composing materials. Loads never
+// complete headless, which is fine because texture maps are stripped right after parse.
+if (typeof globalThis.document === 'undefined') {
+  const dummyImg = () => ({ addEventListener() {}, removeEventListener() {}, crossOrigin: null });
+  globalThis.document = { createElementNS: () => dummyImg(), createElement: () => dummyImg() };
+}
 // ColladaLoader needs DOMParser: light tag-tree shim (elements, attrs, text, query by tag).
 // Covers geometry/material/scene subset the loader walks; exotic extensions fall back to Blender path.
 if (typeof globalThis.DOMParser === 'undefined') {

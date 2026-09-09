@@ -29,6 +29,12 @@ if (typeof globalThis.FileReader === 'undefined') {
     }
   };
 }
+// document stub: three's ImageLoader creates <img> while loading materials. Loads never
+// complete headless, which is fine because texture maps are stripped right after parse.
+if (typeof globalThis.document === 'undefined') {
+  const dummyImg = () => ({ addEventListener() {}, removeEventListener() {}, crossOrigin: null });
+  globalThis.document = { createElementNS: () => dummyImg(), createElement: () => dummyImg() };
+}
 
 const UNITS = { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144 };
 const args = process.argv.slice(2);
