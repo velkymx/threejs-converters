@@ -8,7 +8,7 @@
 //   node converters/3ds-to-glb.js <in.3ds> [--out out.glb] [--units cm] [--scale 1] [--target-max 2]
 //     [--z-up] [--keep-textures] [--no-center] [--no-ground]
 // Deps: three (npm i three)
-import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // --- headless shims: GLTFExporter needs FileReader (buffer + image paths), never DOM for geometry ---
@@ -61,7 +61,11 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.in) { console.error('Missing input.'); process.exit(1); }
+  if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
   if (o.units && !UNITS[o.units]) { console.error(`Bad --units.`); process.exit(1); }
+  if (!(o.scale > 0) || ![o.targetMax, o.targetHeight].every((v) => Number.isFinite(v) && v >= 0)) {
+    console.error('Bad --scale/--target-max/--target-height.'); process.exit(1);
+  }
   if (!o.out) o.out = o.in.replace(/\.3ds$/i, '.glb');
   return o;
 }
@@ -74,6 +78,7 @@ const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter
 let group;
 try {
   const data = readFileSync(o.in);
+  if (data.length < 6 || data.readUInt16LE(0) !== 0x4d4d) { console.error('Not a 3DS file (bad magic).'); process.exit(1); }
   group = new TDSLoader().parse(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength), resolve(o.in));
 } catch (e) { console.error(`3DS parse failed: ${e.message}\nFallback: Blender → Import .3ds → Export glTF (.glb) → glb-optimize.js`); process.exit(1); }
 let content = group;
