@@ -11,7 +11,7 @@ pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1"; exit 1; }
 expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
-echo "--- 0. --help smoke (all 19 tools exit 0) ---"
+echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
   collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb \
   gltf-report rig-report rig-normalize budget-gate; do

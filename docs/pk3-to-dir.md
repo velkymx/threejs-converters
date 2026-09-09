@@ -17,6 +17,8 @@ pk3-to-dir unpacks Quake 3 `.pk3` files (renamed ZIPs carrying models, textures,
 node converters/pk3-to-dir.js <in.pk3|in.zip> [--out-dir dir] [--list] [--max-mb 512]
 ```
 
+## Options
+
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--out-dir` | input name minus extension | Extraction root, created if missing. |

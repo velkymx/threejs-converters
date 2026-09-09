@@ -20,6 +20,8 @@ node converters/md2-to-glb.js <in.md2> [--out out.glb] [--frame 0]
   [--no-center] [--no-ground]
 ```
 
+## Options
+
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--out` | same name, `.glb` | Output path. |

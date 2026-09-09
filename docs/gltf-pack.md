@@ -18,6 +18,8 @@ gltf-pack turns a split `.gltf` (JSON plus sidecar `.bin` buffers and loose imag
 node converters/gltf-pack.js <in.gltf> [--out out.glb]
 ```
 
+## Options
+
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--out` | same name, `.glb` | Output path. |

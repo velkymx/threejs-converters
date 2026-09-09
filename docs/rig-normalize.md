@@ -20,6 +20,8 @@ Check first with [rig-report](rig-report.md). Only normalize when flagged.
 node converters/rig-normalize.js <in.glb> [--out out.rig.glb]
 ```
 
+## Options
+
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--out` | same name, `.rig.glb` | Output path. |

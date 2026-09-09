@@ -19,6 +19,8 @@ node converters/vox-to-glb.js <in.vox> [--out out.glb] [--units m] [--scale 1]
   [--target-max 1] [--target-height 1] [--no-center] [--no-ground]
 ```
 
+## Options
+
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `--out` | same name, `.glb` | Output path. |
