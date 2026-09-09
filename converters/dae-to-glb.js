@@ -152,8 +152,15 @@ const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter
 
 let dae;
 try {
-  const text = readFileSync(o.in, 'utf8');
+  const raw = readFileSync(o.in);
+  if (raw.includes(0)) {
+    console.error('Not DAE: binary content — COLLADA is XML text. For FBX use fbx-to-glb.js, for 3DS use 3ds-to-glb.js.');
+    process.exit(1);
+  }
+  const text = raw.toString('utf8');
   if (!/<COLLADA[\s>]/.test(text)) { console.error('Not a DAE file (no COLLADA root).'); process.exit(1); }
+  const ver = (text.match(/<COLLADA[^>]*version="([^"]+)"/) || [])[1];
+  if (ver && !ver.startsWith('1.4')) console.log(`Note: COLLADA ${ver} (tested on 1.4.x) — best-effort, verify output.`);
   dae = new ColladaLoader().parse(text, resolve(o.in));
 } catch (e) { console.error(`DAE parse failed: ${e.message}\nFallback: Blender → Import .dae → Export glTF (.glb) → glb-optimize.js`); process.exit(1); }
 let content = dae.scene;
