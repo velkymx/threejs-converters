@@ -79,6 +79,7 @@ let group;
 try {
   const data = readFileSync(o.in);
   if (data.length < 6 || data.readUInt16LE(0) !== 0x4d4d) { console.error('Not a 3DS file (bad magic).'); process.exit(1); }
+  if (data.readUInt32LE(2) > data.length) { console.error('3DS truncated (declared size exceeds file).'); process.exit(1); }
   group = new TDSLoader().parse(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength), resolve(o.in));
 } catch (e) { console.error(`3DS parse failed: ${e.message}\nFallback: Blender → Import .3ds → Export glTF (.glb) → glb-optimize.js`); process.exit(1); }
 let content = group;
