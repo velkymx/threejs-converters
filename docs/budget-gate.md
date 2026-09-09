@@ -9,7 +9,7 @@
 
 ## Introduction
 
-budget-gate enforces model budgets where [gltf-report](gltf-report.md) only advises. It checks tris, draws, materials, images, file weight, and world size against limits, prints `PASS` or `FAIL` with the fix tool for every breach, and exits 1 on failure. That makes it suitable for CI pipelines and pre-commit hooks — heavy finds never ship. It is zero-dependency and runs with plain Node.
+budget-gate enforces model budgets where [gltf-report](gltf-report.md) only advises. It checks tris, draws, materials, images, file weight, and world size against limits, prints `PASS` or `FAIL` with the fix tool for every breach, and exits 1 on failure. That makes it suitable for CI pipelines and pre-commit hooks. Heavy finds never ship. It is zero-dependency and runs with plain Node.
 
 Defaults equal the mobile-ready thresholds from the project budgets: 100k tris, 50 draws, 16 materials, 8 MB, 8 images.
 
@@ -33,7 +33,7 @@ node converters/budget-gate.js <model.glb> [--max-tris 100000] [--max-draws 50] 
 | `--max-size` | off | Fail if the world max-dimension is larger. |
 | `--json` | off | Machine-readable result (`pass`, counts, `fails` list). |
 
-World size uses the same full-transform bbox math as `gltf-report`. Quantized positions are unmeasurable statically, so they never fail the size checks — gate the pre-quantize file when scale matters.
+World size uses the same full-transform bbox math as `gltf-report`. Quantized positions are unmeasurable statically, so they never fail the size checks. Gate the pre-quantize file when scale matters.
 
 ## Examples
 
@@ -52,7 +52,7 @@ node converters/budget-gate.js ./assets/samba.glb --max-mb 4
 
 ## CI Wiring
 
-Gate the files your game actually loads — optimized outputs and split parts, not raw finds:
+Gate the files your game actually loads: optimized outputs and split parts, not raw finds:
 
 ```bash
 node converters/budget-gate.js ./assets/level.glb --max-tris 300000 --max-draws 100 || exit 1
@@ -63,5 +63,5 @@ node converters/budget-gate.js ./assets/level.glb --max-tris 300000 --max-draws 
 
 ## See Also
 
-- [gltf-report](gltf-report.md) — the human-readable diagnosis behind a FAIL.
-- [glb-optimize](glb-optimize.md) — the fix for most breaches.
+- [gltf-report](gltf-report.md): the human-readable diagnosis behind a FAIL.
+- [glb-optimize](glb-optimize.md): the fix for most breaches.

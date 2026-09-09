@@ -28,7 +28,7 @@ node converters/gltf-report.js <model.glb|model.gltf> [--json]
 ## What It Reports
 
 - `verts`, `tris`, `meshes`, `nodes`, `draws` (draw calls = primitives), `materials`, `textures`, `images`, file size.
-- World bbox: size in meters, max dimension, center, and `min.y` — the three numbers that decide whether a model behaves ingame.
+- World bbox: size in meters, max dimension, center, and `min.y`. These three numbers decide whether a model behaves ingame.
 - Fix hints when budgets bust: merge for draws, optimize for tris, texture-convert for weight.
 
 ## Scale Warnings
@@ -38,10 +38,10 @@ node converters/gltf-report.js <model.glb|model.gltf> [--json]
 | `HUGE` (>1000 m) | Suspect millimeters | `glb-optimize --units mm --target-max 2` |
 | `LARGE` (>100 m) | Suspect centimeters | `--units cm --target-max 2` |
 | `TINY` (<1 cm) / `SMALL` (<10 cm) | Suspect micro units | `--scale 100` or `--target-max 2` |
-| `OFF-ORIGIN` | Center far from origin — float jitter | Default recenter (drop `--no-center`) |
+| `OFF-ORIGIN` | Center far from origin (float jitter) | Default recenter (drop `--no-center`) |
 | `FLOATING` / `UNDERGROUND` | Hovers or buried | Default grounding (drop `--no-ground`) |
 
-Two honest limits: primitives without POSITION min/max are counted as partial (re-export the source), and quantized positions are unreadable statically — run the report on the pre-quantize file instead. Non-triangle primitives (fans/strips) are flagged but draw fine in three.js.
+Two honest limits: primitives without POSITION min/max are counted as partial (re-export the source), and quantized positions are unreadable statically. Run the report on the pre-quantize file instead. Non-triangle primitives (fans/strips) are flagged but draw fine in three.js.
 
 ## Verdicts
 
@@ -50,7 +50,7 @@ Two honest limits: primitives without POSITION min/max are counted as partial (r
 | `MOBILE-READY` | <100k tris and <50 draws |
 | `MOBILE-OK` | <300k tris and <100 draws |
 | `DESKTOP-OK` | <1M tris |
-| `HEAVY` | Anything above — optimize or split before use |
+| `HEAVY` | Anything above. Optimize or split before use. |
 
 ## Examples
 
@@ -66,5 +66,5 @@ node converters/gltf-report.js ./assets/samba.glb
 
 ## See Also
 
-- [budget-gate](budget-gate.md) — enforce these budgets in CI (this tool only advises).
-- [glb-optimize](glb-optimize.md) — the fix for most warnings above.
+- [budget-gate](budget-gate.md): enforce these budgets in CI (this tool only advises).
+- [glb-optimize](glb-optimize.md): the fix for most warnings above.
