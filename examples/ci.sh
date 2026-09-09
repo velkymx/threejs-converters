@@ -13,7 +13,7 @@ expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
 echo "--- 0. --help smoke (all 19 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -316,6 +316,55 @@ if node converters/md2-to-glb.js "$OUT/test.md2" --frame 9 --out "$OUT/x.glb" >/
   fail "md2 should refuse bad frame"
 fi
 pass "md2 refuses bad frame"
+
+echo "--- 13. minecraft: blockmodel cubes convert, parent resolves, uvs exact ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: real blockmodel JSON (full cube + rotated element + texture vars) proves faces,
+// rotation, and uv mapping; the child proves --parent-dir chaining
+const faces = {};
+for (const d of ['down','up','north','south','west','east'])
+  faces[d] = { uv: [0, 0, 16, 16], texture: '#side' };
+const model = {
+  textures: { side: 'block/stone', top: 'block/stone_top' },
+  elements: [
+    { from: [0, 0, 0], to: [16, 16, 16], faces },
+    { from: [4, 0, 4], to: [12, 8, 12],
+      rotation: { origin: [8, 0, 8], axis: 'y', angle: 45 },
+      faces: { up: { uv: [0, 0, 8, 8], texture: '#top' } } },
+  ],
+};
+writeFileSync('$OUT/crate.json', JSON.stringify(model));
+writeFileSync('$OUT/crate_child.json', JSON.stringify({ parent: 'crate', textures: { side: 'block/oak' } }));
+console.log('mc fixture ok');
+" || fail "mc fixture"
+node converters/minecraft-to-glb.js "$OUT/crate.json" --out "$OUT/mc.glb" >/dev/null
+expect_file "$OUT/mc.glb"
+node converters/gltf-report.js "$OUT/mc.glb" | grep -q "tris 14" || fail "mc tri count (12+2)"
+node converters/gltf-report.js "$OUT/mc.glb" | grep -q "1.000 x 1.000 x 1.000" || fail "mc meter scale"
+node --input-type=module -e "
+import { NodeIO } from '@gltf-transform/core';
+// why: exact uv assert on the box north face (3rd face in, verts 8..11) pins the
+// orientation table against regressions: A(u1,v2) B(u2,v2) C(u2,v1) D(u1,v1), v-flipped
+const doc = await new NodeIO().read('$OUT/mc.glb');
+const prim = doc.getRoot().listMeshes()[0].listPrimitives()[0];
+const uv = [...prim.getAttribute('TEXCOORD_0').getArray()].slice(16, 24);
+const want = [0, 0, 1, 0, 1, 1, 0, 1];
+if (!uv.every((v, i) => Math.abs(v - want[i]) < 1e-6)) throw new Error('north uvs ' + uv.join(','));
+const n = [...prim.getAttribute('NORMAL').getArray()].slice(24, 27);
+if (n.join(',') !== '0,0,-1') throw new Error('north normal ' + n.join(','));
+console.log('mc uvs exact');
+" || fail "mc north uvs"
+node converters/minecraft-to-glb.js "$OUT/crate_child.json" --parent-dir "$OUT" --out "$OUT/mc-child.glb" >/dev/null
+expect_file "$OUT/mc-child.glb"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+writeFileSync('$OUT/orphan.json', JSON.stringify({ parent: 'does-not-exist' }));
+" || fail "mc orphan fixture"
+if node converters/minecraft-to-glb.js "$OUT/orphan.json" --parent-dir "$OUT/empty-parents" --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "mc should refuse unresolvable parent"
+fi
+pass "mc converts, parents, uvs"
 
 echo ""
 echo "ALL CI CHECKS PASSED"
