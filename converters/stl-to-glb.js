@@ -7,7 +7,7 @@
 //   node converters/stl-to-glb.js <in.stl> [--out out.glb] [--units mm] [--scale 1] [--target-max 2]
 //     [--smooth] [--color #rrggbb] [--metal 0.1] [--rough 0.8] [--no-center] [--no-ground]
 // Notes: dedupe key = position+normal (flat shading kept, coplanar merges). --smooth averages normals (organic prints).
-import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 
 const UNITS = { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144 };
@@ -28,6 +28,7 @@ function parse(argv) {
     scale: 1, units: 'mm', targetMax: 0, center: true, ground: true, smooth: false };
   const hex = (s) => {
     s = s.replace('#', ''); if (s.length === 3) s = [...s].map((c) => c + c).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(s)) { console.error(`Bad --color '${s}' (want #rrggbb).`); process.exit(1); }
     return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16) / 255).concat(1);
   };
   for (let i = 0; i < argv.length; i++) {
@@ -46,6 +47,8 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.in) { console.error('Missing input.'); process.exit(1); }
+  if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+  if (![o.metal, o.rough].every(Number.isFinite)) { console.error('Bad --metal/--rough (want numbers).'); process.exit(1); }
   if (!UNITS[o.units]) { console.error(`Bad --units (want ${Object.keys(UNITS).join('|')})`); process.exit(1); }
   if (!(o.scale > 0) || o.targetMax < 0 || !Number.isFinite(o.targetMax)) { console.error('Bad --scale/--target-max.'); process.exit(1); }
   if (!o.out) o.out = o.in.replace(/\.stl$/i, '.glb');
