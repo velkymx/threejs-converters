@@ -28,6 +28,7 @@ function parse(argv) {
     scale: 1, units: null, targetMax: 0, center: true, ground: true };
   const hex = (s) => {
     s = s.replace('#', ''); if (s.length === 3) s = [...s].map((c) => c + c).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(s)) { console.error(`Bad --color '${s}' (want #rrggbb).`); process.exit(1); }
     return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16) / 255).concat(1);
   };
   for (let i = 0; i < argv.length; i++) {
@@ -46,6 +47,8 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.in) { console.error('Missing input.'); process.exit(1); }
+  if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+  if (![o.metal, o.rough].every(Number.isFinite)) { console.error('Bad --metal/--rough (want numbers).'); process.exit(1); }
   if (o.units && !UNITS[o.units]) { console.error(`Bad --units (want ${Object.keys(UNITS).join('|')})`); process.exit(1); }
   if (!(o.scale > 0) || (o.targetMax < 0 || !Number.isFinite(o.targetMax))) { console.error('Bad --scale/--target-max.'); process.exit(1); }
   if (!o.out) o.out = o.in.replace(/\.obj$/i, '.glb');
@@ -92,6 +95,7 @@ for (const line of src.split('\n')) {
     for (let k = 1; k < verts.length - 1; k++) idx.push(verts[0], verts[k], verts[k + 1]); // fan triangulate
   }
 }
+if (!idx.length) { console.error('OBJ has no faces (nothing to convert).'); process.exit(1); }
 
 // --- SCALE: uniform factor + recenter (single mesh: local == world, exact) ---
 {
