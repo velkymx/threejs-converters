@@ -2,7 +2,7 @@
 // gltf-report.js — budget + SCALE check for three.js. Zero deps. Pure Node.
 // Usage: node converters/gltf-report.js <model.glb|gltf> [--json]
 // Reports: verts, tris, meshes, nodes, draws, materials, textures, size + WORLD bbox (node transforms applied) → verdict.
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, existsSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 if (!args.length || args.includes('--help') || args.includes('-h')) {
@@ -17,13 +17,20 @@ Scale (reason: three.js 1 unit = 1 meter):
   process.exit(args.length ? 0 : 1);
 }
 const file = args.find((a) => !a.startsWith('--'));
+if (!file) { console.error('Missing input file.'); process.exit(1); }
+if (!existsSync(file)) { console.error(`No such file: ${file}`); process.exit(1); }
 const asJson = args.includes('--json');
-const bytes = readFileSync(file);
+let bytes;
+try { bytes = readFileSync(file); }
+catch { console.error(`Cannot read ${file}.`); process.exit(1); }
 let json;
-if (file.endsWith('.glb')) {
-  const jsonLen = bytes.readUInt32LE(12);
-  json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
-} else json = JSON.parse(bytes.toString('utf8'));
+try {
+  if (file.endsWith('.glb')) {
+    if (bytes.length < 20) throw new Error('too small');
+    const jsonLen = bytes.readUInt32LE(12);
+    json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
+  } else json = JSON.parse(bytes.toString('utf8'));
+} catch { console.error(`Cannot parse ${file} (not valid glTF/GLB).`); process.exit(1); }
 
 // --- minimal column-major mat4: node local = matrix ?? T*R*S ---
 function quatMat([x, y, z, w]) {
