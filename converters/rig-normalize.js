@@ -9,7 +9,8 @@
 // Usage: node converters/rig-normalize.js <in.glb> [--out out.glb]
 // Order: rig-normalize FIRST, then glb-optimize (quantize leaves JOINTS/WEIGHTS alone).
 // Deps: @gltf-transform/core (npm i)
-import { writeFileSync, statSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 
 const args = process.argv.slice(2);
@@ -27,6 +28,7 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${args[i]}`); process.exit(1); }
 }
 if (!input) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(input)) { console.error(`No such file: ${input}`); process.exit(1); }
 if (!output) output = input.replace(/\.glb$/i, '.rig.glb');
 
 const UMAX = { 5121: 255, 5123: 65535 };
@@ -41,7 +43,9 @@ const toFloat = (acc) => { // weights → float regardless of storage
 };
 
 const io = new NodeIO();
-const doc = await io.read(input);
+let doc;
+try { doc = await io.read(input); }
+catch { console.error(`Cannot read ${input} (corrupt or unsupported glTF).`); process.exit(1); }
 let prims = 0, clamped = 0, renorm = 0, stripped = 0;
 
 for (const mesh of doc.getRoot().listMeshes()) for (const prim of mesh.listPrimitives()) {
@@ -89,6 +93,8 @@ for (const skin of doc.getRoot().listSkins()) {
   }
 }
 
+try { mkdirSync(dirname(output) || '.', { recursive: true }); }
+catch { console.error(`Cannot write to ${output} (bad path).`); process.exit(1); }
 await io.write(output, doc);
 console.log(`Wrote ${output} (${(statSync(output).size/1024).toFixed(1)} KB) — ${prims} skinned prim(s): ${clamped} verts clamped to 4, ${renorm} renormalized, ${stripped} 2nd-set(s) stripped, ${ibmAdded} IBM added.`);
 console.log('Next: node converters/rig-report.js ' + output + '  (expect OK)');
