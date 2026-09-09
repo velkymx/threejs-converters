@@ -13,7 +13,7 @@ expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
 echo "--- 0. --help smoke (all 19 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -146,6 +146,54 @@ refuse_msg "rig-report rejects fake GLB" "magic" node converters/rig-report.js "
 refuse_msg "rig-normalize rejects fake GLB" "magic" node converters/rig-normalize.js "$OUT/fake.glb"
 refuse "pack rejects v1" node converters/gltf-pack.js "$OUT/v1.gltf" --out "$OUT/x.glb"
 refuse_msg "texture rejects huge file" "too large" node converters/texture-convert.js "$OUT/huge.png" --out-dir "$OUT/tex"
+
+echo "--- 9. pk3: zip extracts byte-identical ---"
+node --input-type=module -e "
+import { writeFileSync, readFileSync } from 'node:fs';
+import { deflateRawSync, crc32 } from 'node:zlib';
+// why: committed binary fixtures are opaque; generating a real deflated+stored zip here
+// proves the reader against genuine buffers every run
+const files = [
+  { name: 'models/cube.obj', data: readFileSync('assets/cube.obj'), method: 8 },
+  { name: 'models/cube.skin', data: Buffer.from('cube,models/cube.tga\n', 'ascii'), method: 0 },
+];
+const chunks = [], central = [];
+let off = 0;
+const dosTime = 0x645c, dosDate = 0x4a21; // fixed stamp keeps fixture deterministic
+for (const f of files) {
+  const body = f.method === 8 ? deflateRawSync(f.data) : f.data;
+  const name = Buffer.from(f.name, 'utf8');
+  const lh = Buffer.alloc(30);
+  lh.write('PK\x03\x04', 0, 'binary'); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(0x0800, 6);
+  lh.writeUInt16LE(f.method, 8); lh.writeUInt16LE(dosTime, 10); lh.writeUInt16LE(dosDate, 12);
+  lh.writeUInt32LE(crc32(f.data) >>> 0, 14); lh.writeUInt32LE(body.length, 18); lh.writeUInt32LE(f.data.length, 22);
+  lh.writeUInt16LE(name.length, 26); lh.writeUInt16LE(0, 28);
+  chunks.push(lh, name, body);
+  const cd = Buffer.alloc(46);
+  cd.write('PK\x01\x02', 0, 'binary'); cd.writeUInt16LE(20, 4); cd.writeUInt16LE(20, 6); cd.writeUInt16LE(0x0800, 8);
+  cd.writeUInt16LE(f.method, 10); cd.writeUInt16LE(dosTime, 12); cd.writeUInt16LE(dosDate, 14);
+  cd.writeUInt32LE(crc32(f.data) >>> 0, 16); cd.writeUInt32LE(body.length, 20); cd.writeUInt32LE(f.data.length, 24);
+  cd.writeUInt16LE(name.length, 28); cd.writeUInt32LE(0, 38); cd.writeUInt32LE(off, 42);
+  central.push(cd, name);
+  off += lh.length + name.length + body.length;
+}
+const cdStart = off;
+for (const c of central) { chunks.push(c); off += c.length; }
+const end = Buffer.alloc(22);
+end.write('PK\x05\x06', 0, 'binary'); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10);
+end.writeUInt32LE(off - cdStart, 12); end.writeUInt32LE(cdStart, 16);
+chunks.push(end);
+writeFileSync('$OUT/test.pk3', Buffer.concat(chunks));
+console.log('pk3 fixture ok');
+" || fail "pk3 fixture"
+node converters/pk3-to-dir.js "$OUT/test.pk3" --out-dir "$OUT/pk3" >/dev/null
+cmp -s assets/cube.obj "$OUT/pk3/models/cube.obj" || fail "pk3 obj not byte-identical"
+[ -s "$OUT/pk3/models/cube.skin" ] || fail "pk3 skin missing"
+pass "pk3 extracts byte-identical"
+if node converters/pk3-to-dir.js assets/cube.obj --out-dir "$OUT/xpk3" >/dev/null 2>&1; then
+  fail "pk3 should refuse non-zip"
+fi
+pass "pk3 refuses non-zip"
 
 echo ""
 echo "ALL CI CHECKS PASSED"

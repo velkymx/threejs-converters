@@ -17,6 +17,7 @@
     "dae2glb": "node converters/dae-to-glb.js",
     "3ds2glb": "node converters/3ds-to-glb.js",
     "pack": "node converters/gltf-pack.js",
+    "pk3": "node converters/pk3-to-dir.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
