@@ -11,13 +11,13 @@
 
 ## Introduction
 
-minecraft-to-glb converts Minecraft block and item JSON models into GLB files with zero dependencies. Elements become quads with verified outward windings, flat normals, and exact per-face UVs; a sibling `.skin`-style parent chain resolves through `--parent-dir`; block units divide by 16 into meters before the shared scale convention applies.
+minecraft-to-glb converts Minecraft block and item JSON models into GLB files with zero dependencies. Elements become quads with verified outward windings, flat normals, and exact per-face UVs; `parent` chains resolve through `--parent-dir`; block units divide by 16 into meters before the shared scale convention applies.
 
 ## Usage
 
 ```bash
 node converters/minecraft-to-glb.js <model.json> [--out out.glb] [--parent-dir dir]
-  [--units m] [--scale 1] [--target-max 2] [--no-center] [--no-ground]
+  [--units mm|cm|m|km|in|ft|yd] [--scale 1] [--target-max 2] [--no-center] [--no-ground]
 ```
 
 ## Options
@@ -57,6 +57,6 @@ UVs follow viewer-outside geometry per face: u runs screen-right, v runs screen-
 
 ## See Also
 
-- [texture-convert](texture-convert.md) — convert the pack PNGs the materials name.
-- [pk3-to-dir](pk3-to-dir.md) — unpack mod zips carrying JSON models.
-- [glb-optimize](glb-optimize.md) — shrink the result as usual.
+- [texture-convert](texture-convert.md): convert the pack PNGs the materials name.
+- [pk3-to-dir](pk3-to-dir.md): unpack mod zips carrying JSON models.
+- [glb-optimize](glb-optimize.md): shrink the result as usual.
