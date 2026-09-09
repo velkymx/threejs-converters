@@ -9,7 +9,7 @@
 
 ## Introduction
 
-pk3-to-dir unpacks Quake 3 `.pk3` files — renamed ZIPs carrying models, textures, and scripts — into a directory tree. Everything downstream (md3-to-glb, textures) needs loose files first, so this is step zero of the Q3 pipeline. It is zero-dependency and runs with plain Node, using `node:zlib` for inflate.
+pk3-to-dir unpacks Quake 3 `.pk3` files (renamed ZIPs carrying models, textures, and scripts) into a directory tree. Everything downstream (md3-to-glb, textures) needs loose files first, so this is step zero of the Q3 pipeline. It is zero-dependency and runs with plain Node, using `node:zlib` for inflate.
 
 ## Usage
 
@@ -32,19 +32,19 @@ node converters/pk3-to-dir.js ./assets/pak0.pk3 --out-dir ./assets/pak0
 # Wrote 2 file(s), 1 dir(s) → ./assets/pak0
 ```
 
-Preview first with `--list` — it walks the same central directory, minus writes.
+Preview first with `--list`. It walks the same central directory, minus writes.
 
 ## Safety Rules
 
 Archives are untrusted input. The tool refuses or skips instead of guessing:
 
 - Non-ZIP magic, missing End-of-central-directory, and multi-disk archives exit 1.
-- `..` traversal, absolute paths, and drive-letter paths are skipped — nothing ever writes outside `--out-dir`.
+- `..` traversal, absolute paths, and drive-letter paths are skipped. Nothing ever writes outside `--out-dir`.
 - Encrypted entries, data descriptors, and non-store/deflate methods are skipped with the reason.
 - Truncated entries (central directory or local header overruns) exit 1.
 - Zero files extracted exits 1, so hostile-or-empty archives never pass silently in a pipeline.
 
 ## See Also
 
-- [md3-to-glb](md3-to-glb.md) — convert the extracted models next.
-- [texture-convert](texture-convert.md) — convert the extracted textures.
+- [md3-to-glb](md3-to-glb.md): convert the extracted models next.
+- [texture-convert](texture-convert.md): convert the extracted textures.
