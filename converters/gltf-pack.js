@@ -35,6 +35,11 @@ const base = dirname(resolve(o.in));
 let json;
 try { json = JSON.parse(readFileSync(o.in, 'utf8')); }
 catch { console.error('Input is not valid JSON (.gltf corrupt).'); process.exit(1); }
+const ver = json.asset?.version || '';
+if (!ver.startsWith('2.')) {
+  console.error(`Unsupported glTF version '${ver || '(missing)'}' (need 2.x). Path: Blender → Import → Export glTF 2.0.`);
+  process.exit(1);
+}
 const dataUri = (u) => {
   const m = /^data:.*?;base64,(.*)$/s.exec(u || '');
   return m ? Buffer.from(m[1], 'base64') : null;
