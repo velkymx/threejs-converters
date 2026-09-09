@@ -4,6 +4,8 @@ One file per converter. Node only. Internet finds → ingame-ready three.js asse
 
 Each script in `converters/` is standalone: `node converters/<tool>.js --help`.
 
+Full guides live in [`docs/`](docs/index.md) — one page per tool, Laravel-style.
+
 ## Install
 
 ```bash
