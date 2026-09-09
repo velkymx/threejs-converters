@@ -12,7 +12,7 @@
 
 rig-normalize makes any skinned GLB three.js-safe. It clamps bone influences to the `vec4` hard limit, renormalizes weights, strips dead second influence sets, and writes explicit identity inverse-bind matrices. Fixes are behavior-preserving except where the source was already broken (extra influences three.js would have dropped anyway). It needs `@gltf-transform/core` (`npm install` covers it).
 
-Check first with [rig-report](rig-report.md) — only normalize when flagged.
+Check first with [rig-report](rig-report.md). Only normalize when flagged.
 
 ## Usage
 
@@ -28,14 +28,14 @@ node converters/rig-normalize.js <in.glb> [--out out.rig.glb]
 
 1. **>4 influences → top 4 by weight, renormalized.** three.js drops extras silently; keeping the strongest four preserves the visible deformation.
 2. **Weight sums ≠ 1 → renormalized.** Stops the mesh breathing when posed.
-3. **`JOINTS_1` / `WEIGHTS_1` merged into the top 4, then stripped.** Dead weight in three.js — gone.
+3. **`JOINTS_1` / `WEIGHTS_1` merged into the top 4, then stripped.** Dead weight in three.js. Gone.
 4. **Missing IBM → explicit identity matrices.** This equals the three.js fallback assumption, now visible to every loader instead of implied.
-5. **WEIGHTS rewritten as FLOAT.** Exact sums — `UBYTE` rounding would re-break normalization.
+5. **WEIGHTS rewritten as FLOAT.** Exact sums. `UBYTE` rounding would re-break normalization.
 6. **Zero-weight verts pinned to their first joint.** They were rigid anyway; now explicitly so.
 
 ## Ordering
 
-Run rig-normalize **first**, then [glb-optimize](glb-optimize.md). Quantization leaves `JOINTS`/`WEIGHTS` alone, so optimizing after is safe — but normalizing after quantizing would fight the packed data.
+Run rig-normalize **first**, then [glb-optimize](glb-optimize.md). Quantization leaves `JOINTS`/`WEIGHTS` alone, so optimizing after is safe. But normalizing after quantizing would fight the packed data.
 
 ## Examples
 
@@ -47,5 +47,5 @@ node converters/rig-normalize.js examples-out/bad-rig.glb --out examples-out/goo
 
 ## See Also
 
-- [rig-report](rig-report.md) — audit before and after.
-- [anim-trim](anim-trim.md) — trim the rigged file's clips next.
+- [rig-report](rig-report.md): audit before and after.
+- [anim-trim](anim-trim.md): trim the rigged file's clips next.

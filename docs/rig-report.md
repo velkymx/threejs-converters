@@ -9,7 +9,7 @@
 
 ## Introduction
 
-rig-report audits whether a skeleton will survive three.js. Rig bugs break silently — extra influences are dropped with no error, bad weight sums make meshes breathe, detached joints freeze limbs at the origin. This tool names each problem and points at the fix. It is zero-dependency and runs with plain Node.
+rig-report audits whether a skeleton will survive three.js. Rig bugs break silently: extra influences are dropped with no error, bad weight sums make meshes breathe, detached joints freeze limbs at the origin. This tool names each problem and points at the fix. It is zero-dependency and runs with plain Node.
 
 > [!NOTE]
 > Full influence decoding needs the `.glb` BIN chunk. For `.gltf` with external `.bin` files you get JSON-only checks plus a note to save as `.glb` for the full audit.
@@ -30,15 +30,15 @@ node converters/rig-report.js <model.glb> [--json]
 
 | Check | Why it breaks ingame |
 | ----- | -------------------- |
-| >4 influences / vertex | three.js skin indices are `vec4` — extras are silently ignored, deformation goes wrong |
+| >4 influences / vertex | three.js skin indices are `vec4`. Extras are silently ignored, deformation goes wrong. |
 | Weight sums ≠ 1 | Mesh inflates/deflates when posed |
-| `JOINTS_1` / `WEIGHTS_1` second set | Ignored by three.js — dead weight |
+| `JOINTS_1` / `WEIGHTS_1` second set | Ignored by three.js. Dead weight. |
 | Missing `inverseBindMatrices` | three.js assumes identity bind; only correct if authored that way |
-| Detached joints (outside scene graph) | No `matrixWorld` updates — limbs freeze |
+| Detached joints (outside scene graph) | No `matrixWorld` updates. Limbs freeze. |
 | Zero / non-uniform joint scale | Skewed or collapsed skin |
 | Zero-weight verts | Rigid at bind pose (usually loose parts — info only) |
 
-A file with no skins reports `No skins: static mesh` — informational, since rigid animations still play.
+A file with no skins reports `No skins: static mesh`. Informational, since rigid animations still play.
 
 ## Examples
 
@@ -65,5 +65,5 @@ node converters/rig-report.js ./assets/samba.glb
 
 ## See Also
 
-- [rig-normalize](rig-normalize.md) — fix everything flagged above.
-- [fbx-to-glb](fbx-to-glb.md) — always audit right after converting an FBX.
+- [rig-normalize](rig-normalize.md): fix everything flagged above.
+- [fbx-to-glb](fbx-to-glb.md): always audit right after converting an FBX.
