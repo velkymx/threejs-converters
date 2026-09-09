@@ -7,7 +7,8 @@
 //     [--scale 0.01] [--units mm|cm|m|km|in|ft|yd] [--target-max 2] [--target-height 1.8]
 //     [--no-center] [--no-ground]
 // Deps: @gltf-transform/core @gltf-transform/functions sharp (npm i)
-import { writeFileSync, statSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import {
   dedup, instance, palette, prune, resample, sparse, weld,
@@ -66,6 +67,8 @@ function parse(argv) {
   if (o.units && !UNITS[o.units]) { console.error(`Bad --units (want ${Object.keys(UNITS).join('|')})`); process.exit(1); }
   for (const k of ['scale', 'texSize', 'quant', 'targetMax', 'targetHeight'])
     if (!Number.isFinite(o[k]) || o[k] < 0 || (k === 'scale' && o[k] === 0)) { console.error(`Bad --${k}: ${o[k]}`); process.exit(1); }
+  if (o.texSize < 1 || o.texSize > 16384) { console.error(`Bad --texSize: ${o.texSize} (want 1..16384).`); process.exit(1); }
+  if (!(o.quant >= 1 && o.quant <= 16)) { console.error(`Bad --quant: ${o.quant} (want 1..16).`); process.exit(1); }
   if (!o.out) o.out = o.in.replace(/\.gl(tf|b)$/i, '.opt.glb');
   return o;
 }
@@ -131,10 +134,15 @@ function worldBBox(doc) {
 const fmt = (b) => b ? `min [${b.min.map((v) => v.toFixed(3))}] max [${b.max.map((v) => v.toFixed(3))}] size [${b.max.map((v, i) => (v - b.min[i]).toFixed(3))}]` : '(no geometry)';
 
 const o = parse(args);
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
+catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 const before = statSync(o.in).size;
 console.log(`Load ${o.in} (${(before / 1024).toFixed(1)} KB)…`);
 const io = new NodeIO();
-const doc = await io.read(o.in);
+let doc;
+try { doc = await io.read(o.in); }
+catch { console.error(`Cannot read ${o.in} (corrupt or unsupported glTF).`); process.exit(1); }
 
 // --- SCALE stage (first: measure raw world units, decide uniform factor, wrap in root) ---
 if (o.doScale) {
