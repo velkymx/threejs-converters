@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "download": "node converters/download.js",
+    "test": "bash examples/ci.sh",    "download": "node converters/download.js",
     "report": "node converters/gltf-report.js",
     "optimize": "node converters/glb-optimize.js",
     "texture": "node converters/texture-convert.js",
