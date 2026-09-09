@@ -9,19 +9,20 @@
     - [3D Print Find](#3d-print-find)
     - [Mixamo / FBX Character](#mixamo--fbx-character)
     - [Texture Set](#texture-set)
+    - [Mods (Quake, Voxel, Minecraft)](#mods-quake-voxel-minecraft)
     - [Level / Ship-Ready Character](#level--ship-ready-character)
 - [Tool Map](#tool-map)
 - [Examples](#examples)
 
 ## Introduction
 
-threejs-converters is a set of single-file Node scripts that turn internet finds — OBJ, STL, FBX, TGA, HDR, anything — into game-ready three.js assets. Each script in `converters/` is standalone: you may run any of them with plain `node`, no build step, no framework:
+threejs-converters is a set of single-file Node scripts that turn internet finds (OBJ, STL, FBX, TGA, HDR, Quake mods, Minecraft models, voxel art, and more) into game-ready three.js assets. Each script in `converters/` is standalone: you may run any of them with plain `node`, no build step, no framework:
 
 ```bash
 node converters/<tool>.js --help
 ```
 
-Every tool follows the same contract: `--help` prints usage and exits, errors explain the fix (usually naming the next tool to run), and outputs default toward three.js conventions — 1 unit = 1 meter, Y-up, centered and grounded models, typed textures.
+Every tool follows the same contract: `--help` prints usage and exits, errors explain the fix (usually naming the next tool to run), and outputs default toward three.js conventions: 1 unit = 1 meter, Y-up, centered and grounded models, typed textures.
 
 ## Requirements
 
@@ -38,11 +39,11 @@ Dependencies are `sharp`, `@gltf-transform/core`, `@gltf-transform/functions`, a
 three.js expects **1 unit = 1 meter**, Y-up, sRGB color maps, linear data maps, and no more than 4 bone influences per vertex. Internet finds honor none of this, so every model converter in this project defaults toward that target:
 
 - Models are centered on XZ and rested on Y (`min.y = 0`) unless you pass `--no-center` / `--no-ground`.
-- Scale flags are shared everywhere: `--units mm|cm|m|km|in|ft|yd`, `--scale FACTOR`, `--target-max M`, `--target-height M`.
+- Scale flags are shared across the model converters: `--units mm|cm|m|km|in|ft|yd`, `--scale FACTOR`, `--target-max M`, `--target-height M`. (Packers, reporters, and the gate have their own flags.)
 - Typical values: Mixamo finds want `--units cm --target-height 1.7`, print finds want `--units mm`, generic props want `--target-max 2`.
 
 > [!NOTE]
-> Scale bugs are the most common way a find breaks ingame — wrong units wreck cameras, physics, and shadows at the same time. When in doubt, run [gltf-report](gltf-report.md) first; it flags HUGE, TINY, OFF-ORIGIN, and FLOATING models and tells you the exact fix flags.
+> Scale bugs are the most common way a find breaks ingame (wrong units wreck cameras, physics, and shadows at the same time). When in doubt, run [gltf-report](gltf-report.md) first; it flags HUGE, TINY, OFF-ORIGIN, and FLOATING models and tells you the exact fix flags.
 
 ## Budgets
 
@@ -88,6 +89,16 @@ node converters/texture-convert.js albedo.png normal_DX.png rough.png orm.png \
   --out-dir ./assets/tex --flip-y --snippet
 ```
 
+### Mods (Quake, Voxel, Minecraft)
+
+```bash
+node converters/pk3-to-dir.js ./assets/pak0.pk3 --out-dir ./assets/pak0
+node converters/md3-to-glb.js ./assets/pak0/models/arena.md3 --out ./assets/arena.glb --target-max 4
+node converters/vox-to-glb.js ./assets/sword.vox --out ./assets/sword.glb --target-max 1
+node converters/md2-to-glb.js ./assets/ogro.md2 --out ./assets/ogro.glb --target-max 2
+node converters/minecraft-to-glb.js ./pack/models/block/crate.json --out ./assets/crate.glb --parent-dir ./pack/models/block --target-max 1
+```
+
 ### Level / Ship-Ready Character
 
 ```bash
@@ -112,6 +123,11 @@ node converters/budget-gate.js ./assets/level.glb   # CI: exits 1 on breach
 | [dae-to-glb](dae-to-glb.md) | three | COLLADA → GLB, best-effort. |
 | [3ds-to-glb](3ds-to-glb.md) | three | Legacy 3DS geometry → GLB. |
 | [gltf-pack](gltf-pack.md) | none | Split .gltf + sidecars → one GLB. |
+| [pk3-to-dir](pk3-to-dir.md) | none | Quake 3 PK3/ZIP → directory tree. |
+| [md3-to-glb](md3-to-glb.md) | none | Quake 3 MD3 frames → GLB. |
+| [vox-to-glb](vox-to-glb.md) | three | MagicaVoxel VOX → GLB. |
+| [md2-to-glb](md2-to-glb.md) | three | Quake 2 MD2 frames → GLB. |
+| [minecraft-to-glb](minecraft-to-glb.md) | none | Minecraft block JSON → GLB. |
 | [fbx-to-glb](fbx-to-glb.md) | three | FBX → GLB, best-effort. |
 | [glb-merge](glb-merge.md) | gltf-transform | N GLBs → one GLB. |
 | [glb-split](glb-split.md) | gltf-transform | One GLB → N GLBs. |
