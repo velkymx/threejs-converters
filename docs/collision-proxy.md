@@ -66,5 +66,5 @@ True convex hulls need native code (a quickhull implementation) that has no pure
 
 ## See Also
 
-- [gltf-report](gltf-report.md) — verify the proxy's world bounds match the visual.
-- [budget-gate](budget-gate.md) — proxies are tiny; gate the visual instead.
+- [gltf-report](gltf-report.md): verify the proxy's world bounds match the visual.
+- [budget-gate](budget-gate.md): proxies are tiny; gate the visual instead.

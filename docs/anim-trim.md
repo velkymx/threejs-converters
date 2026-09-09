@@ -10,7 +10,7 @@
 
 ## Introduction
 
-anim-trim cuts animation bloat out of GLB files. Store and Mixamo finds routinely ship 18-second clips at high key rates when the game needs a 2-second loop at 30 fps. With no flags the tool only lists clips — start there, then keep what you need with `--clip`, cut a time window with `--trim`, and thin keyframes with `--fps`. It needs the `@gltf-transform` dependencies (`npm install` covers them).
+anim-trim cuts animation bloat out of GLB files. Store and Mixamo finds routinely ship 18-second clips at high key rates when the game needs a 2-second loop at 30 fps. With no flags the tool only lists clips. Start there, then keep what you need with `--clip`, cut a time window with `--trim`, and thin keyframes with `--fps`. It needs the `@gltf-transform` dependencies (`npm install` covers them).
 
 ## Usage
 
@@ -36,7 +36,7 @@ node converters/anim-trim.js ./assets/mixamo.glb
 | `--fps` | off | Thin LINEAR keyframes down to roughly N fps. See thinning rules. |
 | `--out` | same name, `.anim.glb` | Output path. |
 
-If the trim window removes every keyframe, the tool exits 1 instead of writing an empty animation — widen the window.
+If the trim window removes every keyframe, the tool exits 1 instead of writing an empty animation. A window matching no keys at all also exits 1. Widen the window in either case.
 
 ## Examples
 
@@ -55,8 +55,8 @@ node converters/anim-trim.js ./assets/mixamo.glb --clip "samba" --trim 0:2 --fps
 `--fps` only touches what it can thin safely:
 
 - The source rate is estimated from the median key interval per sampler. Samplers already at or below the target are left alone.
-- `STEP` samplers are never thinned — dropping held keys would pop the motion.
-- `CUBICSPLINE` samplers are never thinned — keys carry in/out tangents in triplets, so decimation corrupts the curves.
+- `STEP` samplers are never thinned. Dropping held keys would pop the motion.
+- `CUBICSPLINE` samplers are never thinned. Keys carry in/out tangents in triplets, so decimation corrupts the curves.
 - First and last keys of every sampler are always kept, so loops still meet at the ends.
 
 ## three.js Playback
@@ -72,5 +72,5 @@ action.play();
 
 ## See Also
 
-- [fbx-to-glb](fbx-to-glb.md) — convert the FBX before trimming its clips.
-- [gltf-report](gltf-report.md) — confirm animation counts after trimming.
+- [fbx-to-glb](fbx-to-glb.md): convert the FBX before trimming its clips.
+- [gltf-report](gltf-report.md): confirm animation counts after trimming.
