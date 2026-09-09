@@ -32,7 +32,7 @@ You may install everything with npm. Node 20 or newer is required:
 npm install
 ```
 
-Dependencies are `sharp`, `@gltf-transform/core`, `@gltf-transform/functions`, and `three`. Several tools are zero-dependency and run with plain Node — the tool map below marks each one.
+Dependencies are `sharp`, `@gltf-transform/core`, `@gltf-transform/functions`, and `three`. Twelve tools are zero-dependency and run with plain Node (the tool map below marks each one).
 
 ## Conventions
 
