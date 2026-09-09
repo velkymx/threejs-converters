@@ -19,8 +19,6 @@ node converters/gltf-report.js ./assets/chair.glb
 # Verdict: MOBILE-READY, good for games.
 ```
 
-**The proof.** `bash examples/run-all.sh` runs all 34 converters end to end, and `npm test` asserts every one of them in CI on Node 20 and 22. If a find busts a budget, `budget-gate` fails the build with the exact fix.
-
 ```text
 find (OBJ/STL/FBX/TGA/anything) → convert → audit → optimize → gate → game
 ```
