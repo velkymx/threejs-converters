@@ -6,7 +6,8 @@
 //   --type hull refused on purpose (true convex hull needs native code; use Blender: Mesh → Convex Hull → export).
 // Usage: node converters/collision-proxy.js <in.glb> [--out proxy.glb] [--type box] [--snippet]
 // Boxes are axis-aligned in world pose (matches three.js Box3.setFromObject). Rotating bodies: re-fit at runtime.
-import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 const args = process.argv.slice(2);
 if (!args.length || args.includes('--help') || args.includes('-h')) {
@@ -29,6 +30,7 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
 if (o.type !== 'box') {
   console.error(`SKIP --type ${o.type}: true convex hull needs native code (quickhull wasm) or Blender.\nPath: Blender → select mesh → Mesh > Convex Hull → export proxy .glb → use beside visual.`);
   process.exit(1);
@@ -36,8 +38,12 @@ if (o.type !== 'box') {
 if (!o.out) o.out = o.in.replace(/\.glb$/i, '.proxy.glb');
 
 const bytes = readFileSync(o.in);
-const jsonLen = bytes.readUInt32LE(12);
-const json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
+let json;
+try {
+  if (bytes.length < 20) throw new Error('too small');
+  const jsonLen = bytes.readUInt32LE(12);
+  json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
+} catch { console.error(`Cannot read ${o.in} (not a valid .glb).`); process.exit(1); }
 const { accessors: acc = [], meshes = [], nodes = [] } = json;
 
 // world matrices (same minimal chain as gltf-report.js)
@@ -128,6 +134,8 @@ out.writeUInt32LE(0x46546C67, 0); out.writeUInt32LE(2, 4); out.writeUInt32LE(tot
 let off = 12;
 out.writeUInt32LE(jBuf.length, off); out.writeUInt32LE(0x4E4F534A, off + 4); jBuf.copy(out, off + 8); off += 8 + jBuf.length;
 out.writeUInt32LE(bBuf.length, off); out.writeUInt32LE(0x004E4942, off + 4); bBuf.copy(out, off + 8);
+try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
+catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 writeFileSync(o.out, out);
 console.log(`Boxes in ${o.in}:`);
 for (const b of boxes) console.log(` - ${b.name}: size ${b.max.map((v, i) => (v - b.min[i]).toFixed(3)).join(' x ')}m`);
