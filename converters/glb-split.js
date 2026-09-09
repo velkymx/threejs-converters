@@ -5,7 +5,7 @@
 //   in world pose); skins kept only if their joints survive — skinned splits print a warning.
 // Usage: node converters/glb-split.js <in.glb> [--out-dir splits] [--by mesh|scene]
 // Deps: @gltf-transform/core @gltf-transform/functions (npm i)
-import { mkdirSync, writeFileSync, statSync } from 'node:fs';
+import { mkdirSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { cloneDocument, prune } from '@gltf-transform/functions';
@@ -31,16 +31,20 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
 if (!['mesh', 'scene'].includes(o.by)) { console.error('Bad --by (want mesh|scene).'); process.exit(1); }
 const stem = o.in.split('/').pop().replace(/\.gl(b|tf)$/i, '');
 const safe = (s) => (s || 'part').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 48);
 
 const io = new NodeIO();
-const src = await io.read(o.in);
+let src;
+try { src = await io.read(o.in); }
+catch { console.error(`Cannot read ${o.in} (corrupt or unsupported glTF).`); process.exit(1); }
 const root = src.getRoot();
 const skins = root.listSkins().length;
 if (skins && o.by === 'mesh') console.log(`Warn: ${skins} skin(s) present — splits keep joints, verify with rig-report.js.`);
-mkdirSync(o.outDir, { recursive: true });
+try { mkdirSync(o.outDir, { recursive: true }); }
+catch { console.error(`Cannot write to ${o.outDir} (bad path).`); process.exit(1); }
 
 const jobs = o.by === 'scene'
   ? root.listScenes().map((s, i) => ({ name: `${stem}.scene${i}_${safe(s.getName())}`, keepScene: s }))
