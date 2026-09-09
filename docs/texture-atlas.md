@@ -30,7 +30,7 @@ node converters/texture-atlas.js <a.png> <b.png> [...] [--out atlas.png] [--json
 
 ```bash
 node converters/texture-atlas.js ./tex/*.png --out ./tex/atlas.png --snippet
-# Wrote ./tex/atlas.png (4102x4102, 19213.4 KB) + ./tex/atlas.json — 3 tile(s)
+# Wrote ./tex/atlas.png (4102x4102, 19213.4 KB) + ./tex/atlas.json, 3 tile(s)
 # --- three.js snippet ---
 # const atlas = await load('atlas.png'); atlas.colorSpace = SRGBColorSpace;
 # const t_Default_albedo_jpg = atlas.clone(); t.repeat.set(0.499, 0.499); t.offset.set(0.0005, 0.5002); t.needsUpdate = true; // Default_albedo.jpg

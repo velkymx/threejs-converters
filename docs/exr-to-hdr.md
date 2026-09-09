@@ -26,7 +26,7 @@ node converters/exr-to-hdr.js <in.exr> [--out out.hdr] [--data-size 1024]
 ```bash
 node converters/exr-to-hdr.js ./assets/studio.exr --out ./assets/studio.hdr
 # EXR: decoded 1024x512 float.
-# Wrote ./assets/studio.hdr (1414.7 KB) — feeds texture-convert.js
+# Wrote ./assets/studio.hdr (1414.7 KB), feeds texture-convert.js
 node converters/texture-convert.js ./assets/studio.hdr --out-dir ./tex --snippet
 ```
 

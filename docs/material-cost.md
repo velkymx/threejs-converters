@@ -26,7 +26,7 @@ node converters/material-cost.js <model.glb> [--json]
 ```bash
 node converters/material-cost.js ./assets/helmet.glb
 # Cost ./assets/helmet.glb: 1 material(s) → MODERATE
-#  MODERATE Material_MR — 5 textures (sampler pressure)
+#  MODERATE Material_MR, 5 textures (sampler pressure)
 # Fix: drop unneeded lobes in a DCC, or split costly parts to desktop-only variants.
 ```
 

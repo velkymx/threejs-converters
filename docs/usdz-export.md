@@ -27,7 +27,7 @@ node converters/usdz-export.js <in.glb> [--out out.usdz]
 ```bash
 node converters/glb-optimize.js ./assets/chair.glb --out ./assets/chair.opt.glb
 node converters/usdz-export.js ./assets/chair.opt.glb --out ./assets/chair.usdz
-# Wrote ./assets/chair.usdz (412.6 KB) — 1 mesh(es), AR Quick Look ready
+# Wrote ./assets/chair.usdz (412.6 KB), 1 mesh(es), AR Quick Look ready
 ```
 
 ## Textures

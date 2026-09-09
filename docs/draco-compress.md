@@ -29,7 +29,7 @@ node converters/draco-compress.js <in.glb> [--out out.drc.glb] [--method edgebre
 
 ```bash
 node converters/draco-compress.js ./assets/chair.opt.glb --out ./assets/chair.drc.glb
-# Wrote ./assets/chair.drc.glb (28.4 KB, was 41.3 KB) — 31.2% smaller
+# Wrote ./assets/chair.drc.glb (28.4 KB, was 41.3 KB), 31.2% smaller
 # Load in three.js: GLTFLoader + DRACOLoader (draco decoder path) required.
 ```
 
