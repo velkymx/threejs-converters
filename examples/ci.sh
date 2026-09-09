@@ -13,7 +13,7 @@ expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
 echo "--- 0. --help smoke (all 19 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -194,6 +194,47 @@ if node converters/pk3-to-dir.js assets/cube.obj --out-dir "$OUT/xpk3" >/dev/nul
   fail "pk3 should refuse non-zip"
 fi
 pass "pk3 refuses non-zip"
+
+echo "--- 10. md3: binary model converts, frame picked, skin named ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: minimal real MD3 (1 frame, 1 surface, 1 tri) proves the reader against genuine bytes;
+// verts at 64 units = 1.0m after the spec /64 scale
+const enc = (s, n) => { const b = Buffer.alloc(n); b.write(s, 0, 'ascii'); return b; };
+const head = Buffer.alloc(108);
+head.write('IDP3', 0, 'ascii'); head.writeInt32LE(15, 4);
+enc('test', 0).copy(head, 8);
+head.writeInt32LE(1, 76); head.writeInt32LE(0, 80); head.writeInt32LE(1, 84); head.writeInt32LE(0, 88);
+head.writeInt32LE(108, 92); head.writeInt32LE(108, 96); head.writeInt32LE(164, 100);
+const frame = Buffer.alloc(56); // bounds/origin/radius zeros, name first-frame
+enc('first', 16).copy(frame, 40);
+const sh = Buffer.alloc(108);
+sh.write('IDP3', 0, 'ascii'); enc('body', 64).copy(sh, 8);
+sh.writeInt32LE(1, 72); sh.writeInt32LE(1, 76); sh.writeInt32LE(3, 80); sh.writeInt32LE(1, 84);
+sh.writeInt32LE(108, 88); sh.writeInt32LE(120, 92); sh.writeInt32LE(188, 96); sh.writeInt32LE(212, 100);
+const tris = Buffer.alloc(12); tris.writeInt32LE(0, 0); tris.writeInt32LE(1, 4); tris.writeInt32LE(2, 8);
+const shader = Buffer.concat([enc('models/armor.tga', 64), Buffer.alloc(4)]);
+const st = Buffer.alloc(24);
+st.writeFloatLE(0, 0); st.writeFloatLE(0, 4); st.writeFloatLE(1, 8); st.writeFloatLE(0, 12); st.writeFloatLE(0, 16); st.writeFloatLE(1, 20);
+const xyz = Buffer.alloc(24);
+const V = [[0,0,0],[64,0,0],[0,64,0]];
+V.forEach((v, i) => { xyz.writeInt16LE(v[0], i*8); xyz.writeInt16LE(v[1], i*8+2); xyz.writeInt16LE(v[2], i*8+4); xyz.writeUInt16LE(0, i*8+6); });
+const surfEnd = 108 + 12 + 68 + 24 + 24;
+const parts = [head, frame, sh, tris, shader, st, xyz];
+head.writeInt32LE(108 + 56 + surfEnd, 104);
+writeFileSync('$OUT/test.md3', Buffer.concat(parts));
+writeFileSync('$OUT/test.skin', 'body,models/armor.tga\n');
+console.log('md3 fixture ok');
+" || fail "md3 fixture"
+node converters/md3-to-glb.js "$OUT/test.md3" --out "$OUT/md3.glb" >/dev/null
+expect_file "$OUT/md3.glb"
+node converters/gltf-report.js "$OUT/md3.glb" | grep -q "tris 1" || fail "md3 tri count"
+node converters/gltf-report.js "$OUT/md3.glb" | grep -q "1.000 x 1.000" || fail "md3 /64 scale"
+pass "md3 converts at spec scale"
+if node converters/md3-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "md3 should refuse non-MD3"
+fi
+pass "md3 refuses non-MD3"
 
 echo ""
 echo "ALL CI CHECKS PASSED"
