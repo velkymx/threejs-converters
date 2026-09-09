@@ -29,7 +29,7 @@ node converters/3ds-to-glb.js <in.3ds> [--out out.glb] [--units cm] [--scale 1]
 | `--target-max` | off | Auto-fit the longest bbox side to M meters. |
 | `--target-height` | off | Auto-fit the bbox Y height to M meters. |
 | `--z-up` | off | Apply a −90° X rotation first. 3ds Max is Z-up, so try this when the model arrives lying down. |
-| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless — see below. |
+| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless (see below). |
 | `--no-center` | off | Keep the original XZ offset. |
 | `--no-ground` | off | Keep the original Y offset. |
 
@@ -44,7 +44,7 @@ node converters/3ds-to-glb.js ./assets/retro-car.3ds --out ./assets/retro-car.gl
 
 ## Best-Effort Limits
 
-- **Geometry only.** 3DS rigs and animations do not survive in practice — the tool says so in its output instead of implying otherwise.
+- **Geometry only.** 3DS rigs and animations do not survive in practice. The tool says so in its output instead of implying otherwise.
 - **Textures are stripped by default.** Node has no canvas; reattach game textures converted with [texture-convert](texture-convert.md), or use the Blender path.
 
 ## Blender Path
@@ -53,5 +53,5 @@ For textured scenes: File → Import `.3ds` → Export glTF 2.0 (`.glb`), +Y Up,
 
 ## See Also
 
-- [dae-to-glb](dae-to-glb.md) — same headless pattern for COLLADA finds.
-- [gltf-report](gltf-report.md) — confirm units and verdict after converting.
+- [dae-to-glb](dae-to-glb.md): same headless pattern for COLLADA finds.
+- [gltf-report](gltf-report.md): confirm units and verdict after converting.

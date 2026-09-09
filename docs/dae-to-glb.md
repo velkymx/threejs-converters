@@ -10,7 +10,7 @@
 
 ## Introduction
 
-dae-to-glb converts COLLADA finds — old Sketchfab downloads, warehouse models — into GLB files using headless three.js loaders. Geometry, rigs, and animations come across; a `SCALE_ROOT` wrapper applies the usual meter normalization. It needs the `three` dependency (`npm install` covers it), plus a small built-in DOM shim — Node has no `DOMParser`, so the tool ships a tag-tree parser covering the geometry/material/scene subset the loader walks.
+dae-to-glb converts COLLADA finds (old Sketchfab downloads, warehouse models) into GLB files using headless three.js loaders. Geometry, rigs, and animations come across; a `SCALE_ROOT` wrapper applies the usual meter normalization. It needs the `three` dependency (`npm install` covers it), plus a small built-in DOM shim. Node has no `DOMParser`, so the tool ships a tag-tree parser covering the geometry/material/scene subset the loader walks.
 
 ## Usage
 
@@ -29,7 +29,7 @@ node converters/dae-to-glb.js <in.dae> [--out out.glb] [--units cm] [--scale 1]
 | `--target-max` | off | Auto-fit the longest bbox side to M meters. |
 | `--target-height` | off | Auto-fit the bbox Y height to M meters. |
 | `--z-up` | off | Apply a −90° X rotation first. Only for Z-up authored files. |
-| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless — see below. |
+| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless (see below). |
 | `--no-center` | off | Keep the original XZ offset. |
 | `--no-ground` | off | Keep the original Y offset. |
 
@@ -42,7 +42,7 @@ node converters/dae-to-glb.js ./assets/old-chair.dae --out ./assets/old-chair.gl
 # Wrote assets/old-chair.glb (64.8 KB)
 ```
 
-Then check scale before trusting it — DAE-era units vary:
+Then check scale before trusting it. DAE-era units vary:
 
 ```bash
 node converters/gltf-report.js ./assets/old-chair.glb
@@ -61,5 +61,5 @@ For textured or complex rigs: File → Import `.dae` → Export glTF 2.0 (`.glb`
 
 ## See Also
 
-- [fbx-to-glb](fbx-to-glb.md) — same headless pattern for FBX finds.
-- [gltf-report](gltf-report.md) — confirm units and verdict after converting.
+- [fbx-to-glb](fbx-to-glb.md): same headless pattern for FBX finds.
+- [gltf-report](gltf-report.md): confirm units and verdict after converting.
