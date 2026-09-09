@@ -9,7 +9,7 @@
 // Usage: node converters/rig-normalize.js <in.glb> [--out out.glb]
 // Order: rig-normalize FIRST, then glb-optimize (quantize leaves JOINTS/WEIGHTS alone).
 // Deps: @gltf-transform/core (npm i)
-import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 
@@ -30,6 +30,13 @@ for (let i = 0; i < args.length; i++) {
 if (!input) { console.error('Missing input.'); process.exit(1); }
 if (!existsSync(input)) { console.error(`No such file: ${input}`); process.exit(1); }
 if (!output) output = input.replace(/\.glb$/i, '.rig.glb');
+if (input.toLowerCase().endsWith('.glb')) {
+  const b = readFileSync(input);
+  if (b.length < 12 || b.readUInt32LE(0) !== 0x46546c67 || b.readUInt32LE(4) !== 2) {
+    console.error(`Not a GLB file: ${input} (bad magic or version).`);
+    process.exit(1);
+  }
+}
 
 const UMAX = { 5121: 255, 5123: 65535 };
 const toFloat = (acc) => { // weights → float regardless of storage

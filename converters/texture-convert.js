@@ -281,6 +281,11 @@ async function ingest(input) {
 }
 
 for (const input of o.ins) {
+  // why: sharp buffers whole image + intermediates; a 100MB+ find OOMs small CI runners
+  if (statSync(input).size > 100 * 1048576) {
+    console.error(`${basename(input)}: SKIP file too large (>100MB) — downscale upstream first.`);
+    process.exitCode = 1; continue;
+  }
   let ing;
   try { ing = await ingest(input); }
   catch (e) { console.error(`${basename(input)}: SKIP ${e.message}`); process.exitCode = 1; continue; }

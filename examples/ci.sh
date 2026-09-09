@@ -111,5 +111,41 @@ console.log(urls.length + ' doc links resolve');
 " || fail "docs links"
 pass "docs links"
 
+echo "--- 8. mime refusals: wrong magic exits nonzero with path ---"
+printf 'GLB-WANNABE!' > "$OUT/fake.glb"
+printf '{"asset":{"version":"1.0"}}' > "$OUT/v1.gltf"
+truncate -s 101M "$OUT/huge.bin" 2>/dev/null || dd if=/dev/zero of="$OUT/huge.bin" bs=1M count=101 2>/dev/null
+cp "$OUT/huge.bin" "$OUT/huge.png"
+refuse() { # refuse <desc> <cmd...> — must exit nonzero
+  local desc="$1"; shift
+  if "$@" >/dev/null 2>&1; then fail "$desc accepted bad input"; fi
+  pass "$desc refused"
+}
+refuse_msg() { # refuse_msg <desc> <pattern> <cmd...> — nonzero plus message names cause
+  local desc="$1" pat="$2"; shift 2
+  "$@" >"$OUT/refuse.log" 2>&1 && fail "$desc accepted bad input"
+  grep -q "$pat" "$OUT/refuse.log" || fail "$desc hid cause (want /$pat/)"
+  pass "$desc refused with cause"
+}
+refuse "obj rejects GLB" node converters/obj-to-glb.js "$OUT/cube.glb" --out "$OUT/x.glb"
+refuse "obj rejects STL binary" node converters/obj-to-glb.js assets/cube-mm.stl --out "$OUT/x.glb"
+refuse "stl rejects GLB" node converters/stl-to-glb.js "$OUT/cube.glb" --out "$OUT/x.glb"
+refuse "ply rejects GLB" node converters/ply-to-glb.js "$OUT/cube.glb" --out "$OUT/x.glb"
+refuse "dae rejects FBX binary" node converters/dae-to-glb.js "assets/Samba%20Dancing.fbx" --out "$OUT/x.glb"
+refuse "3ds rejects OBJ" node converters/3ds-to-glb.js assets/cube.obj --out "$OUT/x.glb"
+refuse "fbx rejects OBJ" node converters/fbx-to-glb.js assets/cube.obj --out "$OUT/x.glb"
+refuse "merge rejects OBJ" node converters/glb-merge.js assets/cube.obj "$OUT/cube.glb" --out "$OUT/x.glb"
+refuse "split rejects OBJ" node converters/glb-split.js assets/cube.obj --out-dir "$OUT/xsplit"
+refuse_msg "anim rejects fake GLB" "magic" node converters/anim-trim.js "$OUT/fake.glb" --clip x
+refuse_msg "proxy rejects fake GLB" "valid .glb" node converters/collision-proxy.js "$OUT/fake.glb"
+refuse_msg "optimize rejects fake GLB" "magic" node converters/glb-optimize.js "$OUT/fake.glb" --out "$OUT/x.glb" --no-compress
+refuse_msg "material rejects fake GLB" "magic" node converters/material-normalize.js "$OUT/fake.glb" --out "$OUT/x.glb"
+refuse_msg "report rejects fake GLB" "magic" node converters/gltf-report.js "$OUT/fake.glb"
+refuse_msg "gate rejects fake GLB" "magic" node converters/budget-gate.js "$OUT/fake.glb"
+refuse_msg "rig-report rejects fake GLB" "magic" node converters/rig-report.js "$OUT/fake.glb"
+refuse_msg "rig-normalize rejects fake GLB" "magic" node converters/rig-normalize.js "$OUT/fake.glb"
+refuse "pack rejects v1" node converters/gltf-pack.js "$OUT/v1.gltf" --out "$OUT/x.glb"
+refuse_msg "texture rejects huge file" "too large" node converters/texture-convert.js "$OUT/huge.png" --out-dir "$OUT/tex"
+
 echo ""
 echo "ALL CI CHECKS PASSED"

@@ -38,6 +38,10 @@ for (const k of ['maxTris', 'maxDraws', 'maxMats', 'maxMb', 'maxImages', 'minSiz
 let bytes;
 try { bytes = readFileSync(o.in); }
 catch { console.error(`Cannot read ${o.in}.`); process.exit(1); }
+if (o.in.endsWith('.glb') && (bytes.length < 12 || bytes.readUInt32LE(0) !== 0x46546c67 || bytes.readUInt32LE(4) !== 2)) {
+  console.error(`Not a GLB file: ${o.in} (bad magic or version).`);
+  process.exit(1);
+}
 let json;
 try {
   if (o.in.endsWith('.glb')) {

@@ -23,6 +23,10 @@ const asJson = args.includes('--json');
 let bytes;
 try { bytes = readFileSync(file); }
 catch { console.error(`Cannot read ${file}.`); process.exit(1); }
+if (file.endsWith('.glb') && (bytes.length < 12 || bytes.readUInt32LE(0) !== 0x46546c67 || bytes.readUInt32LE(4) !== 2)) {
+  console.error(`Not a GLB file: ${file} (bad magic or version).`);
+  process.exit(1);
+}
 let json;
 try {
   if (file.endsWith('.glb')) {
