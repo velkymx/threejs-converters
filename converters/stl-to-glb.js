@@ -60,6 +60,10 @@ const buf = readFileSync(o.in);
 let tris = []; // flat [x,y,z]*3 per tri
 
 // --- detect: binary size check wins (headers may start with 'solid') ---
+if (buf.length >= 4 && buf.readUInt32LE(0) === 0x46546c67) {
+  console.error('Not STL: GLB magic detected — already converted. Audit with gltf-report.js instead.');
+  process.exit(1);
+}
 const nBin = buf.length >= 84 ? buf.readUInt32LE(80) : -1;
 if (nBin >= 0 && buf.length === 84 + nBin * 50) {
   console.log(`STL binary: ${nBin} facets.`);
