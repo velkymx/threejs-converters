@@ -10,7 +10,7 @@
 
 ## Introduction
 
-gltf-pack turns a split `.gltf` — JSON plus sidecar `.bin` buffers and loose images — into a single self-contained `.glb`. Exporters and pipelines emit the split form; games and loaders want one file. It is zero-dependency and runs with plain Node, and it rewrites nothing but offsets: all other JSON stays byte-identical.
+gltf-pack turns a split `.gltf` (JSON plus sidecar `.bin` buffers and loose images) into a single self-contained `.glb`. Exporters and pipelines emit the split form; games and loaders want one file. It is zero-dependency and runs with plain Node, and it rewrites nothing but offsets: all other JSON stays byte-identical.
 
 ## Usage
 
@@ -22,7 +22,7 @@ node converters/gltf-pack.js <in.gltf> [--out out.glb]
 | ------ | ------- | ----------- |
 | `--out` | same name, `.glb` | Output path. |
 
-Passing a `.glb` input exits 1 — there is nothing to pack.
+Passing a `.glb` input exits 1. There is nothing to pack.
 
 ## Examples
 
@@ -39,11 +39,11 @@ node converters/gltf-pack.js ./assets/model.gltf --out ./assets/model.glb
 
 ## Refusals
 
-- **Missing sidecars** exit 1 naming the expected path — the split export is incomplete.
-- **Remote `http(s)` URIs** exit 1 — fetch them beside the `.gltf` with [download](download.md) first.
+- **Missing sidecars** exit 1 naming the expected path. The split export is incomplete.
+- **Remote `http(s)` URIs** exit 1. Fetch them beside the `.gltf` with [download](download.md) first.
 - **Overflowing buffer views** and totals over the 4 GB GLB limit exit 1 instead of writing a corrupt file.
 
 ## See Also
 
-- [download](download.md) — fetch remote sidecars before packing.
-- [gltf-report](gltf-report.md) — verify the packed result.
+- [download](download.md): fetch remote sidecars before packing.
+- [gltf-report](gltf-report.md): verify the packed result.

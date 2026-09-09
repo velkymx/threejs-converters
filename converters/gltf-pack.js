@@ -4,7 +4,7 @@
 // How: resolve every external buffer/images URI (relative to the .gltf) + embedded data: URIs into one BIN
 //   chunk, rewrite bufferViews to buffer 0 with fresh offsets, keep everything else byte-identical.
 // Usage: node converters/gltf-pack.js <in.gltf> [--out out.glb]
-// Refusals: missing sidecar files, absolute http(s) URIs (fetch via download.js first), >2GB total.
+// Refusals: missing sidecar files, absolute http(s) URIs (fetch via download.js first), >4GB total.
 import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { dirname, resolve, basename } from 'node:path';
 

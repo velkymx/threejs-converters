@@ -10,7 +10,7 @@
 
 ## Introduction
 
-fbx-to-glb converts FBX finds — Mixamo characters, Sketchfab downloads, Blender exports — into GLB files using headless three.js loaders. Geometry, rigs, and animations come across; a `SCALE_ROOT` wrapper applies the usual meter normalization. It needs the `three` dependency (`npm install` covers it).
+fbx-to-glb converts FBX finds (Mixamo characters, Sketchfab downloads, Blender exports) into GLB files using headless three.js loaders. Geometry, rigs, and animations come across; a `SCALE_ROOT` wrapper applies the usual meter normalization. It needs the `three` dependency (`npm install` covers it).
 
 ## Usage
 
@@ -29,7 +29,7 @@ node converters/fbx-to-glb.js <in.fbx> [--out out.glb] [--units cm] [--scale 1]
 | `--target-max` | off | Auto-fit the longest bbox side to M meters. |
 | `--target-height` | off | Auto-fit the bbox Y height to M meters. Ideal for characters. |
 | `--z-up` | off | Apply a −90° X rotation first. Only for Z-up authored files. |
-| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless — see below. |
+| `--keep-textures` | off | Attempt to keep embedded textures. Usually fails headless (see below). |
 | `--no-center` | off | Keep the original XZ offset. |
 | `--no-ground` | off | Keep the original Y offset. |
 
@@ -65,6 +65,6 @@ For textured or complex rigs, the most rock-solid route is Blender: File → Exp
 
 ## See Also
 
-- [rig-report](rig-report.md) — always audit a converted rig.
-- [rig-normalize](rig-normalize.md) — fix whatever the audit flags.
-- [anim-trim](anim-trim.md) — cut the converted clips down to game loops.
+- [rig-report](rig-report.md): always audit a converted rig.
+- [rig-normalize](rig-normalize.md): fix whatever the audit flags.
+- [anim-trim](anim-trim.md): cut the converted clips down to game loops.
