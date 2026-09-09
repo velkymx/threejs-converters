@@ -49,6 +49,15 @@ node converters/texture-convert.js albedo.png normal_DX.png rough.png orm.png \
   --out-dir ./assets/tex --flip-y --snippet
 ```
 
+**Level / ship-ready character:**
+```bash
+node converters/material-normalize.js ./assets/find.glb --out ./assets/find.mat.glb
+node converters/glb-merge.js ./assets/a.glb ./assets/b.glb --out ./assets/level.glb
+node converters/anim-trim.js ./assets/mixamo.glb --clip samba --trim 0:2 --fps 30 --out ./assets/loop.glb
+node converters/collision-proxy.js ./assets/prop.glb --out ./assets/prop.proxy.glb --snippet
+node converters/budget-gate.js ./assets/level.glb   # CI: exit 1 on breach
+```
+
 **Blender path** (textured / complex rigs — most rock-solid route):
 File → Export → glTF 2.0 (`.glb`), +Y Up, Apply Modifiers, UVs + Normals on.
 Then `glb-optimize.js` + `gltf-report.js` as usual. (`.blend` files can't be read in pure Node; FBX textures can't survive headless conversion — export GLB from Blender instead.)
@@ -66,6 +75,12 @@ Then `glb-optimize.js` + `gltf-report.js` as usual. (`.blend` files can't be rea
 | `fbx-to-glb.js` | three | **Best-effort.** Geometry + rig + anims via headless three.js loaders. Textures stripped (no canvas in Node) unless `--keep-textures`. `--z-up` for Z-up authored files. Falls back to Blender path with clear errors. |
 | `rig-report.js` | none | Skeleton audit: >4 influences (three.js vec4 limit — silent breakage), weight sums ≠ 1, missing IBM, detached joints, bad joint scale. Needs `.glb` for influence decode. `--json`. |
 | `rig-normalize.js` | gltf-transform | Top-4 clamp + renormalize, strip JOINTS_1/WEIGHTS_1, explicit identity IBM (= three.js fallback, made visible). Run **before** `glb-optimize`. |
+| `glb-merge.js` | gltf-transform | N GLBs → one. `mergeDocuments` + `join` (fewer draws) + dedup/prune. Mixed units? Normalize inputs first. |
+| `glb-split.js` | gltf-transform | One GLB → N (`--by mesh` default, or `--by scene`). Clone per part + prune orphans. Skinned splits need `rig-report` re-check. |
+| `anim-trim.js` | gltf-transform | List clips (no flags) → `--clip NAME` keep match → `--trim S:E` cut window to t=0 → `--fps N` thin LINEAR keys. STEP/CUBICSPLINE never thinned. |
+| `collision-proxy.js` | none | World-pose AABB per mesh + scene box → tiny `.proxy.glb` + rapier/cannon `--snippet`. `--type hull` refused with Blender path (no pure-Node hull). |
+| `material-normalize.js` | gltf-transform | spec/gloss → metal/rough, unlit → lit, doubleside off (unless `--keep-double`), BLEND→OPAQUE when alpha=1, clamp factors, dedup identical materials. |
+| `budget-gate.js` | none | CI PASS/FAIL (exit 1): `--max-tris 100000` `--max-draws 50` `--max-mats 16` `--max-mb 8` `--max-images 8` `--min-size`/`--max-size`. Each fail prints the fix tool. |
 
 ## Scale flags (model converters)
 

@@ -11,7 +11,13 @@
     "report": "node converters/gltf-report.js",
     "optimize": "node converters/glb-optimize.js",
     "texture": "node converters/texture-convert.js",
-    "obj2glb": "node converters/obj-to-glb.js"
+    "obj2glb": "node converters/obj-to-glb.js",
+    "merge": "node converters/glb-merge.js",
+    "split": "node converters/glb-split.js",
+    "anim": "node converters/anim-trim.js",
+    "proxy": "node converters/collision-proxy.js",
+    "material": "node converters/material-normalize.js",
+    "gate": "node converters/budget-gate.js"
   },
   "dependencies": {
     "@gltf-transform/core": "^4.2.0",
