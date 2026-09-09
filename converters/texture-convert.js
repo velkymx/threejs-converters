@@ -40,7 +40,7 @@ function sniff(b) {
 const REFUSE = {
   dds: 'DDS is GPU-block data: needs native transcoder (toktx) or Blender → export PNG.',
   ktx: 'KTX already GPU-packed: use as-is with KTX2Loader, or Blender → export PNG.',
-  exr: 'EXR needs OpenEXR: Blender Image Editor → save as PNG/HDR, or ship .hdr instead.',
+  exr: 'EXR needs decoding first: exr-to-hdr.js → float .hdr (or Blender Image Editor → PNG).',
 };
 
 // ---------- TGA decoder (type 2 raw + type 10 RLE, 24/32-bit) ----------

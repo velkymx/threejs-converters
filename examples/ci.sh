@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -164,6 +164,53 @@ const mean = async (f) => (await sharp(f).stats()).channels.slice(0, 3).map(c =>
 node converters/hdr-to-cubemap.js "$OUT/red.hdr" --out-dir "$OUT/cubehdr" --size 8 >/dev/null
 [ -s "$OUT/cubehdr/px.png" ] || fail "hdr branch faces"
 pass "cubemap remaps"
+
+echo "--- 4g. exr: float decodes to readable hdr ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: minimal uncompressed EXR (2x2 RGB float, all-red) proves header walk + channel read;
+// writer mirrors the spec layout the loader expects (chlist, offsets, planar scanlines)
+const str = (s) => Buffer.concat([Buffer.from(s, 'ascii'), Buffer.from([0])]);
+const i32 = (v) => { const b = Buffer.alloc(4); b.writeInt32LE(v, 0); return b; };
+const f32 = (v) => { const b = Buffer.alloc(4); b.writeFloatLE(v, 0); return b; };
+// why full attribute envelopes: EXR attributes are name + type + size + value; the loader
+// dispatches on type, so bare values misparse (proven by failure, not guessing)
+const attr = (name, type, value) => Buffer.concat([str(name), str(type), i32(value.length), value]);
+const ch = (name) => Buffer.concat([str(name), i32(2), Buffer.from([0, 0, 0, 0]), i32(1), i32(1)]);
+let head = Buffer.alloc(8); head.writeInt32LE(20000630, 0); head.writeInt32LE(2, 4);
+const attrs = Buffer.concat([
+  attr('channels', 'chlist', Buffer.concat([ch('R'), ch('G'), ch('B'), Buffer.from([0])])),
+  attr('compression', 'compression', Buffer.from([0])),
+  attr('dataWindow', 'box2i', Buffer.concat([i32(0), i32(0), i32(1), i32(1)])),
+  attr('displayWindow', 'box2i', Buffer.concat([i32(0), i32(0), i32(1), i32(1)])),
+  attr('lineOrder', 'lineOrder', Buffer.from([0])),
+  attr('pixelAspectRatio', 'float', f32(1)),
+  attr('screenWindowCenter', 'v2f', Buffer.concat([f32(0), f32(0)])),
+  attr('screenWindowWidth', 'float', f32(1)),
+  Buffer.from([0]),
+]);
+const off0 = 8 + attrs.length + 16;
+const scan = (y) => {
+  const px = Buffer.alloc(2 * 3 * 4);
+  for (let x = 0; x < 2; x++) for (let c = 0; c < 3; c++) px.writeFloatLE(c === 0 ? 4 : 0, (c * 2 + x) * 4);
+  const h = Buffer.alloc(8); h.writeInt32LE(y, 0); h.writeUInt32LE(px.length, 4);
+  return Buffer.concat([h, px]);
+};
+const s0 = scan(0), s1 = scan(1);
+const offs = Buffer.alloc(16);
+offs.writeBigUInt64LE(BigInt(off0), 0); offs.writeBigUInt64LE(BigInt(off0 + s0.length), 8);
+writeFileSync('$OUT/red.exr', Buffer.concat([head, attrs, offs, s0, s1]));
+console.log('exr fixture ok');
+" || fail "exr fixture"
+node converters/exr-to-hdr.js "$OUT/red.exr" --out "$OUT/red.hdr" >/dev/null
+node -e "
+const fs = require('fs');
+const b = fs.readFileSync('$OUT/red.hdr');
+if (b.subarray(0, 10).toString() !== '#?RADIANCE') throw new Error('not hdr');
+" || fail "exr hdr output"
+node converters/texture-convert.js "$OUT/red.hdr" --out-dir "$OUT/tex" >/dev/null
+[ -s "$OUT/tex/red.1024.linear.hdr" ] || fail "hdr chain convert"
+pass "exr decodes, chains to texture-convert"
 
 echo "--- 4d. svg: paths extrude to meshes, fills become materials ---"
 node --input-type=module -e "
