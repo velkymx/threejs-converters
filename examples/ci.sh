@@ -659,14 +659,15 @@ fi
 pass "usdz refuses non-GLB"
 
 echo "--- 15. draco: geometry compresses smaller, stays valid ---"
-node converters/draco-compress.js test-out/real/packed.glb --out "$OUT/packed.drc.glb" >/dev/null
-expect_glb "$OUT/packed.drc.glb"
+node converters/draco-compress.js "$OUT/samba-loop.glb" --out "$OUT/samba.drc.glb" >/dev/null
+expect_glb "$OUT/samba.drc.glb"
+SRC_TRIS_DRC="$(node converters/gltf-report.js "$OUT/samba-loop.glb" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).tris))")"
 node -e "
 const fs = require('fs');
-const a = fs.statSync('test-out/real/packed.glb').size;
-const b = fs.statSync('$OUT/packed.drc.glb').size;
+const a = fs.statSync('$OUT/samba-loop.glb').size;
+const b = fs.statSync('$OUT/samba.drc.glb').size;
 if (!(b < a)) throw new Error('not smaller: ' + b + ' vs ' + a);
-const buf = fs.readFileSync('$OUT/packed.drc.glb');
+const buf = fs.readFileSync('$OUT/samba.drc.glb');
 const j = JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8'));
 if (!(j.extensionsUsed || []).includes('KHR_draco_mesh_compression')) throw new Error('no draco extension');
 console.log('draco smaller with extension');
@@ -674,22 +675,28 @@ console.log('draco smaller with extension');
 node --input-type=module -e "
 import draco3d from 'draco3dgltf';
 import { readFileSync } from 'node:fs';
-// why: encoding without decoding proves nothing — run the real decoder over the first
-// compressed bufferView and match the face count
-const buf = readFileSync('$OUT/packed.drc.glb');
+// why: encoding without decoding proves nothing — run the real decoder over every
+// compressed primitive and match the total face count from the source report
+const buf = readFileSync('$OUT/samba.drc.glb');
 const j = JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8'));
 const bin = buf.subarray(20 + buf.readUInt32LE(12) + 8);
-const prim = j.meshes[0].primitives[0];
-const bv = j.bufferViews[prim.extensions['KHR_draco_mesh_compression'].bufferView];
-const bytes = bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength);
 const mod = await draco3d.createDecoderModule();
 const d = new mod.Decoder();
-const db = new mod.DecoderBuffer();
-db.Init(new Int8Array(bytes.buffer, bytes.byteOffset, bytes.length), bytes.length);
-const geo = new mod.Mesh();
-const st = d.DecodeBufferToMesh(db, geo);
-if (!st.ok() || geo.num_faces() !== 15452) throw new Error('decode mismatch: ' + geo.num_faces());
-console.log('draco decodes to 15452 faces');
+let faces = 0;
+for (const m of j.meshes) for (const prim of m.primitives) {
+  const ext = (prim.extensions || {})['KHR_draco_mesh_compression'];
+  if (!ext) throw new Error('primitive missing draco extension');
+  const bv = j.bufferViews[ext.bufferView];
+  const bytes = bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength);
+  const db = new mod.DecoderBuffer();
+  db.Init(new Int8Array(bytes.buffer, bytes.byteOffset, bytes.length), bytes.length);
+  const geo = new mod.Mesh();
+  const st = d.DecodeBufferToMesh(db, geo);
+  if (!st.ok()) throw new Error('decode failed');
+  faces += geo.num_faces();
+}
+if (faces !== $SRC_TRIS_DRC) throw new Error('decode mismatch: ' + faces + ' vs $SRC_TRIS_DRC');
+console.log('draco decodes to ' + faces + ' faces');
 " || fail "draco decode roundtrip"
 pass "draco compresses"
 if node converters/draco-compress.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
