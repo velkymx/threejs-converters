@@ -7,7 +7,7 @@
 //   else OPAQUE · clamp metal/rough/emissive into range · dedup identical materials.
 // Usage: node converters/material-normalize.js <in.glb> [--out out.glb] [--keep-double]
 // Deps: @gltf-transform/core @gltf-transform/functions (npm i)
-import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { metalRough, dedup, prune } from '@gltf-transform/functions';
@@ -33,6 +33,13 @@ for (let i = 0; i < args.length; i++) {
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
 if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+if (o.in.toLowerCase().endsWith('.glb')) {
+  const b = readFileSync(o.in);
+  if (b.length < 12 || b.readUInt32LE(0) !== 0x46546c67 || b.readUInt32LE(4) !== 2) {
+    console.error(`Not a GLB file: ${o.in} (bad magic or version).`);
+    process.exit(1);
+  }
+}
 if (!o.out) o.out = o.in.replace(/\.gl(b|tf)$/i, '.mat.glb');
 
 const io = new NodeIO();
