@@ -60,7 +60,7 @@ Filenames decide the type unless `--type` or `--linear` overrides:
 - **Refused with a path forward:** DDS and KTX (GPU-block data; needs `toktx` or Blender → PNG), EXR (needs OpenEXR; Blender → PNG/HDR). RLE-compressed BMP, 16-bit TGA, and old-RLE HDR are likewise refused with the reason printed.
 
 > [!NOTE]
-> KTX2 output is intentionally out of scope: it needs the `toktx` binary, which is not pure Node. Ship WebP — `GLTFLoader` reads it built-in.
+> KTX2 output is intentionally out of scope: it needs the `toktx` binary, which is not pure Node. Ship WebP. `GLTFLoader` reads it built-in.
 
 ## Safety Rules
 
