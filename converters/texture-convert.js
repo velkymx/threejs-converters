@@ -14,7 +14,7 @@
 //     [--format webp|avif|png|jpg] [--quality N] [--type color|normal|data|env] [--linear]
 //     [--flip-y] [--lossless] [--tonemap 1.0] [--snippet]
 // Deps: sharp (npm i sharp).
-import { readFileSync, statSync, mkdirSync } from 'node:fs';
+import { readFileSync, statSync, mkdirSync, existsSync } from 'node:fs';
 import { basename, extname, join, resolve } from 'node:path';
 import sharp from 'sharp';
 
@@ -225,9 +225,13 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.ins.length) { console.error('Missing input.'); process.exit(1); }
+  for (const f of o.ins) if (!existsSync(f)) { console.error(`${basename(f)}: SKIP no such file.`); process.exitCode = 1; }
+  o.ins = o.ins.filter((f) => existsSync(f));
+  if (!o.ins.length) process.exit(1);
   if (o.out && (o.ins.length > 1 || o.outDir)) { console.error('--out only for single input without --out-dir.'); process.exit(1); }
   if (o.type && !['color', 'normal', 'data', 'env'].includes(o.type)) { console.error('Bad --type.'); process.exit(1); }
   for (const k of ['size', 'dataSize']) if (!Number.isFinite(o[k]) || o[k] <= 0) { console.error(`Bad --${k}.`); process.exit(1); }
+  if (o.quality != null && (!Number.isFinite(o.quality) || o.quality < 1 || o.quality > 100)) { console.error('Bad --quality (want 1..100).'); process.exit(1); }
   if (o.tonemap < 0 || !Number.isFinite(o.tonemap)) { console.error('Bad --tonemap.'); process.exit(1); }
   return o;
 }
