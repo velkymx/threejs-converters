@@ -52,6 +52,9 @@ node converters/md3-to-glb.js assets/test.md3 --out examples-out/md3.glb
 node converters/vox-to-glb.js assets/test.vox --out examples-out/vox.glb --target-max 1 2>&1 | grep -v "GLTFExporter: Use"
 node converters/md2-to-glb.js assets/test.md2 --out examples-out/md2.glb 2>&1 | grep -v "GLTFExporter: Use"
 node converters/minecraft-to-glb.js assets/crate.json --out examples-out/crate.glb
+node converters/3mf-to-glb.js assets/test.3mf --out examples-out/model.3mf.glb --target-max 1
+node converters/exr-to-hdr.js assets/test.exr --out examples-out/red.hdr
+node converters/texture-convert.js examples-out/red.hdr --out-dir examples-out/tex || true
 
 say "4. fbx-to-glb — Mixamo FBX to GLB (best-effort)"
 node converters/fbx-to-glb.js "assets/Samba%20Dancing.fbx" --out examples-out/samba.glb --units cm --target-height 1.7 2>&1 | grep -v "GLTFExporter: Use"
@@ -97,6 +100,19 @@ node converters/collision-proxy.js examples-out/cube.glb --out examples-out/cube
 say "14. budget-gate — CI PASS/FAIL"
 node converters/budget-gate.js examples-out/cube.opt.glb || true
 node converters/budget-gate.js examples-out/samba.glb --max-mb 4 || true
+
+say "15. deliver — usdz / draco / lod + cost audit"
+node converters/usdz-export.js examples-out/cube.glb --out examples-out/cube.usdz
+node converters/draco-compress.js examples-out/cube.opt.glb --out examples-out/cube.drc.glb
+node converters/lod-generate.js examples-out/samba-loop.glb --out examples-out/samba-lod.glb --levels 0.5 || true
+node converters/material-cost.js examples-out/cube.mat.glb || true
+
+say "16. textures — atlas / cubemap + vector / text in"
+node converters/texture-atlas.js assets/albedo.png assets/normal_dx.png --out examples-out/atlas.png --snippet || true
+node converters/hdr-to-cubemap.js assets/fixture_studio.hdr --out-dir examples-out/sky --size 64 || true
+printf '%s' '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"><rect x="10" y="10" width="30" height="40" fill="#ff0000"/><circle cx="70" cy="30" r="20" fill="#0000ff"/></svg>' > examples-out/logo.svg
+node converters/svg-to-glb.js examples-out/logo.svg --out examples-out/logo.glb --target-max 1 || true
+node converters/font-to-glb.js --text "Hi" --out examples-out/hi.glb --target-max 1 || true
 
 echo ""
 echo "Done. Outputs in examples-out/."
