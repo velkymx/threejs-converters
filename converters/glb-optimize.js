@@ -7,7 +7,7 @@
 //     [--scale 0.01] [--units mm|cm|m|km|in|ft|yd] [--target-max 2] [--target-height 1.8]
 //     [--no-center] [--no-ground]
 // Deps: @gltf-transform/core @gltf-transform/functions sharp (npm i)
-import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import {
@@ -135,6 +135,13 @@ const fmt = (b) => b ? `min [${b.min.map((v) => v.toFixed(3))}] max [${b.max.map
 
 const o = parse(args);
 if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+if (o.in.toLowerCase().endsWith('.glb')) {
+  const b = readFileSync(o.in);
+  if (b.length < 12 || b.readUInt32LE(0) !== 0x46546c67 || b.readUInt32LE(4) !== 2) {
+    console.error(`Not a GLB file: ${o.in} (bad magic or version).`);
+    process.exit(1);
+  }
+}
 try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
 catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 const before = statSync(o.in).size;
