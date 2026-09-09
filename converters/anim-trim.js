@@ -9,7 +9,8 @@
 //                        CUBICSPLINE untouched — thinning either corrupts tangents or pops)
 // Usage: node converters/anim-trim.js <in.glb> [--clip run] [--trim 0:2.5] [--fps 30] [--out out.glb]
 // Deps: @gltf-transform/core (npm i)
-import { writeFileSync, statSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 
 const args = process.argv.slice(2);
@@ -40,9 +41,12 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
 
 const io = new NodeIO();
-const doc = await io.read(o.in);
+let doc;
+try { doc = await io.read(o.in); }
+catch { console.error(`Cannot read ${o.in} (corrupt or unsupported glTF).`); process.exit(1); }
 const root = doc.getRoot();
 const anims = root.listAnimations();
 if (!anims.length) { console.log('No animations found.'); process.exit(0); }
@@ -81,7 +85,7 @@ if (o.clip) {
 }
 
 // --- TRIM + FPS per sampler ---
-let trimmedKeys = 0, thinnedKeys = 0;
+let trimmedKeys = 0, thinnedKeys = 0, keptKeys = 0;
 for (const a of root.listAnimations()) {
   for (const s of a.listSamplers()) {
     const inp = s.getInput(), out = s.getOutput();
@@ -112,6 +116,7 @@ for (const a of root.listAnimations()) {
       }
     }
     const base = o.trim ? o.trim[0] : 0;
+    keptKeys += idx.length;
     const nT = new Float32Array(idx.length);
     const nO = new Float32Array(idx.length * stride);
     idx.forEach((si, k) => {
@@ -131,9 +136,12 @@ for (const a of root.listAnimations()) {
   for (const s of [...a.listSamplers()]) if (!s.getInput() || s.getInput().getCount() === 0) s.dispose();
 }
 if (!root.listAnimations().length) { console.error('Trim removed everything — widen --trim window.'); process.exit(1); }
+if (o.trim && keptKeys === 0) { console.error(`--trim ${o.trim[0]}:${o.trim[1]} matches no keys — widen window.`); process.exit(1); }
 console.log(`Trim: cut ${trimmedKeys} key(s)${o.fps ? `, thinned ${thinnedKeys} key(s)` : ''}`);
 
 if (!o.out) o.out = o.in.replace(/\.glb$/i, '.anim.glb');
+try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
+catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 writeFileSync(o.out, Buffer.from(await io.writeBinary(doc)));
 console.log(`Wrote ${o.out} (${(statSync(o.out).size / 1024).toFixed(1)} KB)`);
 for (const a of root.listAnimations()) {
