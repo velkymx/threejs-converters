@@ -7,7 +7,8 @@
 //   else OPAQUE · clamp metal/rough/emissive into range · dedup identical materials.
 // Usage: node converters/material-normalize.js <in.glb> [--out out.glb] [--keep-double]
 // Deps: @gltf-transform/core @gltf-transform/functions (npm i)
-import { writeFileSync, statSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { metalRough, dedup, prune } from '@gltf-transform/functions';
 
@@ -31,10 +32,13 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
 if (!o.out) o.out = o.in.replace(/\.gl(b|tf)$/i, '.mat.glb');
 
 const io = new NodeIO();
-const doc = await io.read(o.in);
+let doc;
+try { doc = await io.read(o.in); }
+catch { console.error(`Cannot read ${o.in} (corrupt or unsupported glTF).`); process.exit(1); }
 await doc.transform(metalRough()); // spec-gloss legacy → metal/rough (no-op if already PBR)
 
 const clamp01 = (v) => Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
@@ -70,5 +74,7 @@ await doc.transform(dedup(), prune({ keepAttributes: true }));
 
 console.log(`Materials: ${seen.size + merged} → ${seen.size} (${merged} duplicates merged)`);
 console.log(`Fixes: ${unlit} unlit→lit, ${doubled} double→front, ${blended} blend→opaque, ${clamped} factor(s) clamped`);
+try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
+catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 writeFileSync(o.out, Buffer.from(await io.writeBinary(doc)));
 console.log(`Wrote ${o.out} (${(statSync(o.out).size / 1024).toFixed(1)} KB)`);
