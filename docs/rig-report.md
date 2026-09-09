@@ -36,7 +36,7 @@ node converters/rig-report.js <model.glb> [--json]
 | Missing `inverseBindMatrices` | three.js assumes identity bind; only correct if authored that way |
 | Detached joints (outside scene graph) | No `matrixWorld` updates. Limbs freeze. |
 | Zero / non-uniform joint scale | Skewed or collapsed skin |
-| Zero-weight verts | Rigid at bind pose (usually loose parts — info only) |
+| Zero-weight verts | Rigid at bind pose (usually loose parts; info only) |
 
 A file with no skins reports `No skins: static mesh`. Informational, since rigid animations still play.
 
