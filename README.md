@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node >= 20](https://img.shields.io/badge/Node-%3E%3D20-blue.svg)](package.json)
 
-One-file Node converters: OBJ to GLB, FBX to GLB, STL to GLB, glTF optimizer, texture converter, rig validator — internet finds → ingame-ready three.js assets.
+One-file Node converters: OBJ, STL, PLY, DAE, 3DS, FBX to GLB, glTF pack, glTF optimizer, texture converter, rig validator — internet finds → ingame-ready three.js assets.
 
 ## The three-minute pitch
 
@@ -19,7 +19,7 @@ node converters/gltf-report.js ./assets/chair.glb
 # Verdict: MOBILE-READY — good for games.
 ```
 
-**The proof.** `bash examples/run-all.sh` runs all 15 converters end to end, and `npm test` asserts every one of them in CI on Node 20 and 22. If a find busts a budget, `budget-gate` fails the build with the exact fix.
+**The proof.** `bash examples/run-all.sh` runs all 19 converters end to end, and `npm test` asserts every one of them in CI on Node 20 and 22. If a find busts a budget, `budget-gate` fails the build with the exact fix.
 
 ```text
 find (OBJ/STL/FBX/TGA/anything) → convert → audit → optimize → gate → game
@@ -49,7 +49,7 @@ It exists because the last mile between "downloaded a model" and "renders correc
 
 ## Features
 
-- **15 single-file converters** — OBJ/STL/FBX → GLB, GLB merge/split, animation trim, collision proxies, material + texture normalization, budget/scale/rig audits, CI gate.
+- **19 single-file converters** — OBJ/STL/PLY/DAE/3DS/FBX → GLB, glTF pack, GLB merge/split, animation trim, collision proxies, material + texture normalization, budget/scale/rig audits, CI gate.
 - **three.js-first defaults** — meter scale, centered + grounded, sRGB colors, top-4 bone influences, WebP textures with `colorSpace` snippets.
 - **Honest errors** — proprietary-format limits (FBX textures, KTX2, hulls) refuse with a working path, never a corrupt file.
 - **Zero-dep core** — download, reports, ingest converters, proxy, and gate run on plain Node.
@@ -80,7 +80,7 @@ Model converters share scale flags (`--units` `--scale` `--target-max` `--target
 
 Full guides live in [`docs/`](docs/index.md) — one page per tool:
 
-- Ingest: [download](https://github.com/velkymx/threejs-converters/blob/main/docs/download.md) · [obj-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/obj-to-glb.md) · [stl-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/stl-to-glb.md) · [fbx-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/fbx-to-glb.md) — finds to meter-scale GLBs.
+- Ingest: [download](https://github.com/velkymx/threejs-converters/blob/main/docs/download.md) · [obj-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/obj-to-glb.md) · [stl-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/stl-to-glb.md) · [ply-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/ply-to-glb.md) · [dae-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/dae-to-glb.md) · [3ds-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/3ds-to-glb.md) · [gltf-pack](https://github.com/velkymx/threejs-converters/blob/main/docs/gltf-pack.md) · [fbx-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/fbx-to-glb.md) — finds to meter-scale GLBs.
 - Scene: [glb-merge](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-merge.md) · [glb-split](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-split.md) · [anim-trim](https://github.com/velkymx/threejs-converters/blob/main/docs/anim-trim.md) · [collision-proxy](https://github.com/velkymx/threejs-converters/blob/main/docs/collision-proxy.md) — assemble levels, cut loops, physics boxes.
 - Polish: [glb-optimize](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-optimize.md) · [material-normalize](https://github.com/velkymx/threejs-converters/blob/main/docs/material-normalize.md) · [texture-convert](https://github.com/velkymx/threejs-converters/blob/main/docs/texture-convert.md) — shrink, sane PBR, game textures.
 - Gate: [gltf-report](https://github.com/velkymx/threejs-converters/blob/main/docs/gltf-report.md) · [rig-report](https://github.com/velkymx/threejs-converters/blob/main/docs/rig-report.md) · [rig-normalize](https://github.com/velkymx/threejs-converters/blob/main/docs/rig-normalize.md) · [budget-gate](https://github.com/velkymx/threejs-converters/blob/main/docs/budget-gate.md) — audit, fix, enforce.
