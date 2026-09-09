@@ -4,7 +4,7 @@
 // Checks: --max-tris --max-draws --max-mats --max-mb (file) --max-images --min-size --max-size (world max-dim m)
 // Usage: node converters/budget-gate.js <model.glb> [--max-tris 100000] [--max-draws 50] [--json]
 // Defaults = mobile-ready thresholds from README budgets (tris 100k, draws 50, mats 16, mb 8, images 8).
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, existsSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 if (!args.length || args.includes('--help') || args.includes('-h')) {
@@ -30,13 +30,22 @@ for (let i = 0; i < args.length; i++) {
   else { console.error(`Unknown: ${a}`); process.exit(1); }
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
+if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+for (const k of ['maxTris', 'maxDraws', 'maxMats', 'maxMb', 'maxImages', 'minSize', 'maxSize']) {
+  if (!Number.isFinite(o[k]) || o[k] < 0) { console.error(`Bad threshold for ${k}: ${o[k]}`); process.exit(1); }
+}
 
-const bytes = readFileSync(o.in);
+let bytes;
+try { bytes = readFileSync(o.in); }
+catch { console.error(`Cannot read ${o.in}.`); process.exit(1); }
 let json;
-if (o.in.endsWith('.glb')) {
-  const len = bytes.readUInt32LE(12);
-  json = JSON.parse(bytes.subarray(20, 20 + len).toString('utf8'));
-} else json = JSON.parse(bytes.toString('utf8'));
+try {
+  if (o.in.endsWith('.glb')) {
+    if (bytes.length < 20) throw new Error('too small');
+    const len = bytes.readUInt32LE(12);
+    json = JSON.parse(bytes.subarray(20, 20 + len).toString('utf8'));
+  } else json = JSON.parse(bytes.toString('utf8'));
+} catch { console.error(`Cannot parse ${o.in} (not valid glTF/GLB).`); process.exit(1); }
 
 const acc = json.accessors || [];
 let tris = 0, draws = 0;
