@@ -8,7 +8,7 @@
 //   node converters/fbx-to-glb.js <in.fbx> [--out out.glb] [--units cm] [--scale 1] [--target-max 1.8]
 //     [--z-up] [--keep-textures] [--no-center] [--no-ground]
 // Deps: three (npm i three)
-import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // --- headless shims: GLTFExporter needs FileReader (buffer + image paths), never DOM for geometry ---
@@ -61,7 +61,11 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.in) { console.error('Missing input.'); process.exit(1); }
+  if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
   if (o.units && !UNITS[o.units]) { console.error(`Bad --units.`); process.exit(1); }
+  if (!(o.scale > 0) || ![o.targetMax, o.targetHeight].every((v) => Number.isFinite(v) && v >= 0)) {
+    console.error('Bad --scale/--target-max/--target-height.'); process.exit(1);
+  }
   if (!o.out) o.out = o.in.replace(/\.fbx$/i, '.glb');
   return o;
 }
