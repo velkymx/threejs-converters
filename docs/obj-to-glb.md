@@ -49,10 +49,10 @@ node converters/obj-to-glb.js ./assets/chair.obj --out ./assets/chair.glb --unit
 ## Limitations
 
 - All groups and objects merge into a single mesh with one material. Per-part splits need [glb-split](glb-split.md) after conversion, or a DCC round-trip.
-- Only the MTL diffuse color (`Kd`) is read. Textures referenced by the MTL are not embedded — convert those with [texture-convert](texture-convert.md) and reattach them in three.js.
+- Only the MTL diffuse color (`Kd`) is read. Textures referenced by the MTL are not embedded. Convert those with [texture-convert](texture-convert.md) and reattach them in three.js.
 - The OBJ `-Y-up kept as-is` assumption holds for the common case; exotic up-axis files should go through Blender instead.
 
 ## See Also
 
-- [gltf-report](gltf-report.md) — check the budget and scale verdict next.
-- [glb-optimize](glb-optimize.md) — shrink and normalize the result.
+- [gltf-report](gltf-report.md): check the budget and scale verdict next.
+- [glb-optimize](glb-optimize.md): shrink and normalize the result.
