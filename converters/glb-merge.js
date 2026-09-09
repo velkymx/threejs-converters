@@ -5,7 +5,7 @@
 //   primitives, cuts draws) → dedup + prune. Skins/skeletons merge as-is; run rig-report after on merge.
 // Usage: node converters/glb-merge.js <a.glb> <b.glb> [...] [--out merged.glb] [--no-join] [--no-prune]
 // Deps: @gltf-transform/core @gltf-transform/functions (npm i)
-import { writeFileSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, statSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { mergeDocuments, join, dedup, prune, unpartition } from '@gltf-transform/functions';
@@ -37,6 +37,14 @@ for (let i = 0; i < args.length; i++) {
 if (o.ins.length < 2) { console.error('Need 2+ inputs.'); process.exit(1); }
 if (!o.out) o.out = 'merged.glb';
 for (const f of o.ins) if (!existsSync(f)) { console.error(`No such file: ${f}`); process.exit(1); }
+for (const f of o.ins) {
+  if (!f.toLowerCase().endsWith('.glb')) continue;
+  const b = readFileSync(f);
+  if (b.length < 12 || b.readUInt32LE(0) !== 0x46546c67 || b.readUInt32LE(4) !== 2) {
+    console.error(`Not a GLB file: ${f} (bad magic or version).`);
+    process.exit(1);
+  }
+}
 try { mkdirSync(dirname(o.out) || '.', { recursive: true }); }
 catch { console.error(`Cannot write to ${o.out} (bad path).`); process.exit(1); }
 
