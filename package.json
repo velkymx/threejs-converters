@@ -1,0 +1,22 @@
+{
+  "name": "threejs-converters",
+  "version": "0.1.0",
+  "description": "One-file Node converters: internet finds -> three.js ingame assets",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "download": "node converters/download.js",
+    "report": "node converters/gltf-report.js",
+    "optimize": "node converters/glb-optimize.js",
+    "texture": "node converters/texture-convert.js",
+    "obj2glb": "node converters/obj-to-glb.js"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.2.0",
+    "@gltf-transform/functions": "^4.2.0",
+    "sharp": "^0.34.0",
+    "three": "^0.185.1"
+  }
+}
