@@ -16,6 +16,15 @@ node converters/obj-to-glb.js assets/cube.obj --out examples-out/cube.glb
 say "3. stl-to-glb — print find (mm world) to GLB"
 node converters/stl-to-glb.js assets/cube-mm.stl --out examples-out/stl-cube.glb --target-max 0.2
 
+say "3b. ply / dae / 3ds / pack — more finds in"
+node converters/ply-to-glb.js assets/tri.ply --out examples-out/tri-ply.glb
+node converters/dae-to-glb.js assets/tri.dae --out examples-out/tri-dae.glb --target-max 2 2>&1 | grep -v "GLTFExporter: Use"
+node converters/3ds-to-glb.js assets/tri.3ds --out examples-out/tri-3ds.glb --units mm --target-max 0.2 2>&1 | grep -v "GLTFExporter: Use"
+mkdir -p examples-out/pack && node --input-type=module -e "
+import { NodeIO } from '@gltf-transform/core';
+await new NodeIO().write('examples-out/pack/cube.gltf', await new NodeIO().read('examples-out/cube.glb'));"
+node converters/gltf-pack.js examples-out/pack/cube.gltf --out examples-out/packed.glb
+
 say "4. fbx-to-glb — Mixamo FBX to GLB (best-effort)"
 node converters/fbx-to-glb.js "assets/Samba%20Dancing.fbx" --out examples-out/samba.glb --units cm --target-height 1.7 2>&1 | grep -v "GLTFExporter: Use"
 
