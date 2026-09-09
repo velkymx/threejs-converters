@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr lod-generate pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -322,6 +322,24 @@ pass "gate PASS"
 node converters/budget-gate.js "$OUT/samba.glb" --max-mb 4 >"$OUT/refuse.log" 2>&1 && fail "gate should FAIL samba --max-mb 4"
 grep -q "> 4MB" "$OUT/refuse.log" || fail "gate FAIL hid breach"
 pass "gate FAIL on breach with reason"
+
+echo "--- 6b. lod: each level fewer tris, all valid ---"
+SRC_TRIS="$(node converters/gltf-report.js "$OUT/samba-loop.glb" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).tris))")"
+node converters/lod-generate.js "$OUT/samba-loop.glb" --out "$OUT/lod.glb" --levels 0.5,0.25 >/dev/null
+for l in 1 2; do expect_glb "$OUT/lod.lod$l.glb"; done
+L1="$(node converters/gltf-report.js "$OUT/lod.lod1.glb" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).tris))")"
+L2="$(node converters/gltf-report.js "$OUT/lod.lod2.glb" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).tris))")"
+[ "$L1" -lt "$SRC_TRIS" ] || fail "lod1 not smaller ($L1 vs $SRC_TRIS)"
+[ "$L2" -lt "$L1" ] || fail "lod2 not smaller ($L2 vs $L1)"
+pass "lod chain shrinks ($SRC_TRIS → $L1 → $L2)"
+node converters/rig-report.js "$OUT/lod.lod1.glb" | grep -q "IBM yes" || fail "lod1 IBM unread"
+# why: lod1 carries IBM at accessor index 0, which is falsy — guards the zero-index fix
+node converters/rig-report.js "$OUT/lod.lod1.glb" | grep -q "no inverseBindMatrices" && fail "false IBM alarm on index 0"
+pass "rig-report reads IBM index 0"
+if node converters/lod-generate.js "$OUT/samba-loop.glb" --out "$OUT/x.glb" --levels 1.5 >/dev/null 2>&1; then
+  fail "lod should refuse bad ratio"
+fi
+pass "lod refuses bad ratio"
 
 echo "--- 7. README docs links resolve ---"
 node -e "
