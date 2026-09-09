@@ -11,7 +11,7 @@
 
 stl-to-glb converts 3D-print finds from Thingiverse, Printables, and friends into three.js-ready GLB files. It auto-detects binary vs. ASCII input (the byte-size check wins, since binary headers may start with the word `solid`), drops zero-area degenerate facets with a count, and keeps flat shading by default. It is zero-dependency and runs with plain Node.
 
-STL files are unitless, but the slicer world is millimeters — so unlike the other converters, `--units` defaults to `mm` here.
+STL files are unitless, but the slicer world is millimeters. So unlike the other converters, `--units` defaults to `mm` here.
 
 ## Usage
 
@@ -55,12 +55,12 @@ node converters/stl-to-glb.js assets/tri.ascii.stl --out examples-out/stl-tri.gl
 
 ## Flat vs. Smooth
 
-The default dedupe key is position + normal, so coplanar facets merge while edges stay crisp — mechanical prints look right. Pass `--smooth` for organic sculpts: normals are averaged per position, at the cost of softening hard edges.
+The default dedupe key is position + normal, so coplanar facets merge while edges stay crisp, which is what mechanical prints want. Pass `--smooth` for organic sculpts: normals are averaged per position, at the cost of softening hard edges.
 
 > [!NOTE]
 > STL carries no UVs, so the output has none either. If the prop needs a textured material, unwrap it in a DCC first, or use a plain PBR color via `--color` / `--metal` / `--rough`.
 
 ## See Also
 
-- [glb-optimize](glb-optimize.md) — usually with the same `--target-max`.
-- [collision-proxy](collision-proxy.md) — prints often double as colliders.
+- [glb-optimize](glb-optimize.md): usually with the same `--target-max`.
+- [collision-proxy](collision-proxy.md): prints often double as colliders.
