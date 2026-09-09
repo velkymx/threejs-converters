@@ -24,7 +24,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
   pass "$1"
 }
 
-echo "--- 0. --help smoke (all 24 tools exit 0) ---"
+echo "--- 0. --help smoke (all 34 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
   collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr lod-generate material-cost pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do

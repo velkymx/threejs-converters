@@ -11,6 +11,7 @@
     - [Texture Set](#texture-set)
     - [Mods (Quake, Voxel, Minecraft)](#mods-quake-voxel-minecraft)
     - [Level / Ship-Ready Character](#level--ship-ready-character)
+    - [Deliver (Web, Mobile, AR)](#deliver-web-mobile-ar)
 - [Tool Map](#tool-map)
 - [Examples](#examples)
 
@@ -109,6 +110,15 @@ node converters/collision-proxy.js ./assets/prop.glb --out ./assets/prop.proxy.g
 node converters/budget-gate.js ./assets/level.glb   # CI: exits 1 on breach
 ```
 
+### Deliver (Web, Mobile, AR)
+
+```bash
+node converters/draco-compress.js ./assets/chair.opt.glb --out ./assets/chair.drc.glb
+node converters/lod-generate.js ./assets/tree.glb --out ./assets/tree.lod.glb --levels 0.5,0.25
+node converters/usdz-export.js ./assets/chair.opt.glb --out ./assets/chair.usdz
+node converters/material-cost.js ./assets/helmet.glb
+```
+
 > [!TIP]
 > Complex textured rigs convert most reliably through Blender: File → Export → glTF 2.0 (`.glb`), +Y Up, Apply Modifiers, UVs + Normals on. Then continue with `glb-optimize` as usual. `.blend` files cannot be read in pure Node, and FBX textures cannot survive headless conversion.
 
@@ -136,6 +146,16 @@ node converters/budget-gate.js ./assets/level.glb   # CI: exits 1 on breach
 | [glb-optimize](glb-optimize.md) | gltf-transform, sharp | Scale-normalize + shrink. |
 | [material-normalize](material-normalize.md) | gltf-transform | Sane PBR materials. |
 | [texture-convert](texture-convert.md) | sharp | Any raster in → game texture. |
+| [texture-atlas](texture-atlas.md) | sharp | N images → one atlas + UV offsets. |
+| [hdr-to-cubemap](hdr-to-cubemap.md) | sharp | Equirect panorama → 6 cube faces. |
+| [svg-to-glb](svg-to-glb.md) | three | SVG paths → extruded GLB. |
+| [font-to-glb](font-to-glb.md) | three | Text string → extruded GLB. |
+| [3mf-to-glb](3mf-to-glb.md) | three | 3D manufacturing 3MF → GLB. |
+| [exr-to-hdr](exr-to-hdr.md) | three | EXR float → RGBE HDR. |
+| [usdz-export](usdz-export.md) | three | GLB → Apple AR Quick Look USDZ. |
+| [draco-compress](draco-compress.md) | gltf-transform, draco3dgltf | Draco mesh compression. |
+| [lod-generate](lod-generate.md) | gltf-transform, meshoptimizer | LOD chain via simplify. |
+| [material-cost](material-cost.md) | none | PBR feature cost audit. |
 | [gltf-report](gltf-report.md) | none | Budget + world-scale verdict. |
 | [rig-report](rig-report.md) | none | Skeleton audit. |
 | [rig-normalize](rig-normalize.md) | gltf-transform | Skeleton fixes. |
