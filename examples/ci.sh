@@ -13,7 +13,7 @@ expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
 echo "--- 0. --help smoke (all 19 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -235,6 +235,47 @@ if node converters/md3-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2
   fail "md3 should refuse non-MD3"
 fi
 pass "md3 refuses non-MD3"
+
+echo "--- 11. vox: voxel model converts ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: minimal real VOX (MAIN > SIZE 2x2x2 + XYZI 2 voxels) proves parse + greedy mesh;
+// color indices are 1-based into the palette
+const chunk = (id, content, kids) => {
+  const h = Buffer.alloc(12);
+  h.write(id, 0, 'ascii'); h.writeInt32LE(content.length, 4); h.writeInt32LE(kids.reduce((s, k) => s + k.length, 0), 8);
+  return Buffer.concat([h, content, ...kids]);
+};
+const size = Buffer.alloc(12); size.writeInt32LE(2, 0); size.writeInt32LE(2, 4); size.writeInt32LE(2, 8);
+const xyzi = Buffer.alloc(4 + 8);
+xyzi.writeInt32LE(2, 0);
+xyzi.writeUInt8(0, 4); xyzi.writeUInt8(0, 5); xyzi.writeUInt8(0, 6); xyzi.writeUInt8(1, 7);
+xyzi.writeUInt8(1, 8); xyzi.writeUInt8(1, 9); xyzi.writeUInt8(1, 10); xyzi.writeUInt8(2, 11);
+// scene graph: nTRN(0) -> nGRP(1) -> nSHP(2) -> model 0 (what MagicaVoxel writes)
+const dict0 = Buffer.alloc(4);
+const ntrn = Buffer.concat([(()=>{const b=Buffer.alloc(4);b.writeUInt32LE(0,0);return b;})(), dict0,
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(1,0);return b;})(),
+  (()=>{const b=Buffer.alloc(4);b.writeInt32LE(-1,0);return b;})(),
+  (()=>{const b=Buffer.alloc(4);b.writeInt32LE(0,0);return b;})(),
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(1,0);return b;})(), dict0]);
+const ngrp = Buffer.concat([(()=>{const b=Buffer.alloc(4);b.writeUInt32LE(1,0);return b;})(), dict0,
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(1,0);return b;})(),
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(2,0);return b;})()]);
+const nshp = Buffer.concat([(()=>{const b=Buffer.alloc(4);b.writeUInt32LE(2,0);return b;})(), dict0,
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(1,0);return b;})(),
+  (()=>{const b=Buffer.alloc(4);b.writeUInt32LE(0,0);return b;})(), dict0]);
+const head = Buffer.alloc(8); head.write('VOX ', 0, 'ascii'); head.writeInt32LE(150, 4);
+writeFileSync('$OUT/test.vox', Buffer.concat([head, chunk('MAIN', Buffer.alloc(0), [chunk('SIZE', size, []), chunk('XYZI', xyzi, []), chunk('nTRN', ntrn, []), chunk('nGRP', ngrp, []), chunk('nSHP', nshp, [])])]));
+console.log('vox fixture ok');
+" || fail "vox fixture"
+node converters/vox-to-glb.js "$OUT/test.vox" --out "$OUT/vox.glb" --target-max 1 >/dev/null 2>&1
+expect_file "$OUT/vox.glb"
+node converters/gltf-report.js "$OUT/vox.glb" | grep -q "1.000 x 1.000 x 1.000" || fail "vox bbox"
+pass "vox converts"
+if node converters/vox-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "vox should refuse non-VOX"
+fi
+pass "vox refuses non-VOX"
 
 echo ""
 echo "ALL CI CHECKS PASSED"
