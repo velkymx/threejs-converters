@@ -21,6 +21,7 @@
     "md3": "node converters/md3-to-glb.js",
     "md2": "node converters/md2-to-glb.js",
     "vox": "node converters/vox-to-glb.js",
+    "minecraft": "node converters/minecraft-to-glb.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
