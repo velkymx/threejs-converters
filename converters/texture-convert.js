@@ -29,7 +29,7 @@ function sniff(b) {
   if (b.length > 2 && b[0] === 0x42 && b[1] === 0x4d) return 'bmp';
   if (b.length > 4 && b.toString('ascii', 0, 4) === 'DDS ') return 'dds';
   if (b.length > 12 && b[0] === 0xab && b.toString('ascii', 1, 7) === 'KTX ') return 'ktx';
-  if (b.length > 4 && b[0] === 0x76 && b[1] === 0x2f && b[2] === 0x6f && b[3] === 0x19) return 'exr';
+  if (b.length > 4 && b[0] === 0x76 && b[1] === 0x2f && b[2] === 0x31 && b[3] === 0x01) return 'exr';
   const head = b.subarray(0, 64).toString('ascii');
   if (head.startsWith('#?RADIANCE') || head.startsWith('#?RGBE')) return 'hdr';
   const txt = b.subarray(0, 512).toString('utf8').trimStart();
