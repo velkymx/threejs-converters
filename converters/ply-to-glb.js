@@ -7,7 +7,7 @@
 //   node converters/ply-to-glb.js <in.ply> [--out out.glb] [--color "#ff8844"] [--metal 0] [--rough .9]
 //     [--units mm|cm|m|km|in|ft|yd] [--scale 0.01] [--target-max 2] [--no-center] [--no-ground]
 // Note: splat PLYs (SH coefficients, no faces) are not meshes → refused with reason, not guessed.
-import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 
 const UNITS = { mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144 };
@@ -29,6 +29,7 @@ function parse(argv) {
     scale: 1, units: null, targetMax: 0, center: true, ground: true };
   const hex = (s) => {
     s = s.replace('#', ''); if (s.length === 3) s = [...s].map((c) => c + c).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(s)) { console.error(`Bad --color '${s}' (want #rrggbb).`); process.exit(1); }
     return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16) / 255).concat(1);
   };
   for (let i = 0; i < argv.length; i++) {
@@ -46,6 +47,8 @@ function parse(argv) {
     else { console.error(`Unknown: ${a}`); process.exit(1); }
   }
   if (!o.in) { console.error('Missing input.'); process.exit(1); }
+  if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+  if (![o.metal, o.rough].every(Number.isFinite)) { console.error('Bad --metal/--rough (want numbers).'); process.exit(1); }
   if (o.units && !UNITS[o.units]) { console.error(`Bad --units (want ${Object.keys(UNITS).join('|')})`); process.exit(1); }
   if (!(o.scale > 0) || (o.targetMax < 0 || !Number.isFinite(o.targetMax))) { console.error('Bad --scale/--target-max.'); process.exit(1); }
   if (!o.out) o.out = o.in.replace(/\.ply$/i, '.glb');
@@ -92,6 +95,9 @@ if (!hasXYZ) { console.error('PLY vertices lack x/y/z.'); process.exit(1); }
 
 // --- body readers ---
 function readScalar(dv, off, type) {
+  const need = { char: 1, int8: 1, uchar: 1, uint8: 1, short: 2, int16: 2, ushort: 2, uint16: 2,
+    int: 4, int32: 4, uint: 4, uint32: 4, float: 4, float32: 4, double: 8, float64: 8 }[type];
+  if (need === undefined || off + need > dv.byteLength) throw new Error('truncated binary body');
   switch (type) {
     case 'char': case 'int8': return [dv.getInt8(off), 1];
     case 'uchar': case 'uint8': return [dv.getUint8(off), 1];
@@ -150,8 +156,9 @@ if (fmt === 'ascii') {
 } else {
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let off = hEnd;
-  for (const e of elements) {
-    const isV = e === verts, isF = e === faces;
+  try {
+    for (const e of elements) {
+      const isV = e === verts, isF = e === faces;
     if (!isV && !isF) { // skip fixed-stride elements; refuse variable ones
       if (e.props.some((p) => p.list)) { console.error(`SKIP: unsupported list element '${e.name}'. Path: strip it in MeshLab/Blender → export.`); process.exit(1); }
       const stride = e.props.reduce((s, p) => s + T[p.type], 0);
@@ -177,9 +184,14 @@ if (fmt === 'ascii') {
         for (let k = 1; k < f.length - 1; k++) idx.push(f[0], f[k], f[k + 1]);
       }
     }
-  }
+    }
+  } catch (e) { console.error(`PLY binary body truncated or corrupt (${e.message}).`); process.exit(1); }
 }
 if (!P.length || !idx.length) { console.error('PLY yielded no mesh (empty verts/faces).'); process.exit(1); }
+if (!P.every(Number.isFinite) || !idx.every((v) => Number.isInteger(v) && v >= 0 && v < P.length / 3)) {
+  console.error('PLY has corrupt vertices or out-of-range face indices.');
+  process.exit(1);
+}
 console.log(`PLY ${fmt}: ${P.length / 3} verts, ${idx.length / 3} tris${vHasN ? '' : ' (normals computed)'}${vHasUV ? ', +UVs' : ''}${vHasC ? ', +colors' : ''}.`);
 
 // --- SCALE (same convention as obj-to-glb) ---
