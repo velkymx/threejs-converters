@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -195,6 +195,57 @@ if node converters/font-to-glb.js --text "" --out "$OUT/x.glb" >/dev/null 2>&1; 
   fail "font should refuse empty text"
 fi
 pass "font refuses empty text"
+
+echo "--- 4f. 3mf: manufacturing zip converts ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+import { crc32 } from 'node:zlib';
+// why: hand-built OPC zip (stored entries) proves unzip + model parse without fixtures
+const entry = (name, data) => {
+  const n = Buffer.from(name, 'utf8');
+  const lh = Buffer.alloc(30);
+  lh.write('PK\x03\x04', 0, 'binary'); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(0x0800, 6);
+  lh.writeUInt16LE(0, 8);
+    lh.writeUInt32LE(crc32(data) >>> 0, 14);
+  lh.writeUInt32LE(data.length, 18); lh.writeUInt32LE(data.length, 22); lh.writeUInt16LE(n.length, 26);
+  return { lh, n, data };
+};
+const types = Buffer.from('<?xml version=\"1.0\" encoding=\"UTF-8\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"model\" ContentType=\"application/vnd.ms-package.3dmanufacturing-3dmodel+xml\"/><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/></Types>', 'utf8');
+const rels = Buffer.from('<?xml version=\"1.0\" encoding=\"UTF-8\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Target=\"/3D/3dmodel.model\" Id=\"rel0\" Type=\"http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel\"/></Relationships>', 'utf8');
+const model = Buffer.from('<?xml version=\"1.0\" encoding=\"UTF-8\"?><model unit=\"millimeter\" xml:lang=\"en-US\" xmlns=\"http://schemas.microsoft.com/3dmanufacturing/core/2015/02\"><resources><object id=\"1\" name=\"tri\" type=\"model\"><mesh><vertices><vertex x=\"0\" y=\"0\" z=\"0\"/><vertex x=\"1000\" y=\"0\" z=\"0\"/><vertex x=\"0\" y=\"1000\" z=\"0\"/></vertices><triangles><triangle v1=\"0\" v2=\"1\" v3=\"2\"/></triangles></mesh></object></resources><build><item objectid=\"1\"/></build></model>', 'utf8');
+const rels36 = Buffer.from('_rels/.rels');
+const parts = [entry('[Content_Types].xml', types), entry('_rels/.rels', rels), entry('3D/3dmodel.model', model)];
+const chunks = [], central = [];
+let off = 0;
+for (const p of parts) {
+  chunks.push(p.lh, p.n, p.data);
+  const cd = Buffer.alloc(46);
+  cd.write('PK\x01\x02', 0, 'binary'); cd.writeUInt16LE(20, 4); cd.writeUInt16LE(20, 6); cd.writeUInt16LE(0x0800, 8);
+  cd.writeUInt16LE(0, 10);
+    cd.writeUInt32LE(crc32(p.data) >>> 0, 16);
+  cd.writeUInt32LE(p.data.length, 20); cd.writeUInt32LE(p.data.length, 24); cd.writeUInt16LE(p.n.length, 28);
+  cd.writeUInt32LE(off, 42);
+  central.push(cd, p.n);
+  off += 30 + p.n.length + p.data.length;
+}
+const cdStart = off;
+for (const c of central) { chunks.push(c); off += c.length; }
+const end = Buffer.alloc(22);
+end.write('PK\x05\x06', 0, 'binary'); end.writeUInt16LE(parts.length, 8); end.writeUInt16LE(parts.length, 10);
+end.writeUInt32LE(off - cdStart, 12); end.writeUInt32LE(cdStart, 16);
+chunks.push(end);
+writeFileSync('$OUT/test.3mf', Buffer.concat(chunks));
+console.log('3mf fixture ok');
+" || fail "3mf fixture"
+node converters/3mf-to-glb.js "$OUT/test.3mf" --out "$OUT/model.3mf.glb" >/dev/null 2>&1
+expect_glb "$OUT/model.3mf.glb"
+node converters/gltf-report.js "$OUT/model.3mf.glb" | grep -q "tris 1 |" || fail "3mf tri count"
+node converters/gltf-report.js "$OUT/model.3mf.glb" | grep -q "1.000 x 1.000" || fail "3mf mm default"
+pass "3mf converts"
+if node converters/3mf-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "3mf should refuse non-3MF"
+fi
+pass "3mf refuses non-3MF"
 
 echo "--- 5. scene tools ---"
 node converters/material-normalize.js "$OUT/cube.glb" --out "$OUT/cube.mat.glb" >/dev/null
