@@ -7,11 +7,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "bash examples/ci.sh",    "download": "node converters/download.js",
+    "test": "bash examples/ci.sh",
+    "download": "node converters/download.js",
     "report": "node converters/gltf-report.js",
     "optimize": "node converters/glb-optimize.js",
     "texture": "node converters/texture-convert.js",
     "obj2glb": "node converters/obj-to-glb.js",
+    "ply2glb": "node converters/ply-to-glb.js",
+    "dae2glb": "node converters/dae-to-glb.js",
+    "3ds2glb": "node converters/3ds-to-glb.js",
+    "pack": "node converters/gltf-pack.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
