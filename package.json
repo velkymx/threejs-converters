@@ -28,6 +28,7 @@
     "atlas": "node converters/texture-atlas.js",
     "cubemap": "node converters/hdr-to-cubemap.js",
     "svg": "node converters/svg-to-glb.js",
+    "font": "node converters/font-to-glb.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",

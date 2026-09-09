@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -182,6 +182,19 @@ if node converters/svg-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2
   fail "svg should refuse non-SVG"
 fi
 pass "svg refuses non-SVG"
+
+echo "--- 4e. font: text extrudes, multiline stacks, glyphs resolve ---"
+node converters/font-to-glb.js --text "Hi" --out "$OUT/hi.glb" --target-max 1 >/dev/null 2>&1
+expect_glb "$OUT/hi.glb"
+node converters/gltf-report.js "$OUT/hi.glb" | grep -q "max 1.000m" || fail "font scale"
+node converters/font-to-glb.js --text "A
+B" --out "$OUT/ab.glb" --target-max 2 >/dev/null 2>&1
+node converters/gltf-report.js "$OUT/ab.glb" | grep -q "2.000 x " || fail "multiline stacks taller"
+pass "font extrudes"
+if node converters/font-to-glb.js --text "" --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "font should refuse empty text"
+fi
+pass "font refuses empty text"
 
 echo "--- 5. scene tools ---"
 node converters/material-normalize.js "$OUT/cube.glb" --out "$OUT/cube.mat.glb" >/dev/null
