@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -97,6 +97,29 @@ pass "texture set (3 valid webp)"
 node converters/texture-convert.js assets/fixture_u.tga assets/fixture.dds --out-dir "$OUT/tex" >"$OUT/dds.log" 2>&1 && fail "DDS refusal should exit nonzero"
 grep -q "SKIP" "$OUT/dds.log" || fail "DDS refusal hid cause"
 pass "DDS refusal exits nonzero with cause"
+
+echo "--- 4b. atlas: grid packs, offsets JSON matches pixels ---"
+node --input-type=module -e "
+import sharp from 'sharp';
+// why: deterministic 16px solids make the grid math exactly assertable (no fixture files)
+await sharp({ create: { width: 16, height: 16, channels: 4, background: { r: 255, g: 0, b: 0, alpha: 1 } } }).png().toFile('$OUT/a.png');
+await sharp({ create: { width: 16, height: 16, channels: 4, background: { r: 0, g: 255, b: 0, alpha: 1 } } }).png().toFile('$OUT/b.png');
+await sharp({ create: { width: 8, height: 8, channels: 4, background: { r: 0, g: 0, b: 255, alpha: 1 } } }).png().toFile('$OUT/c.png');
+" || fail "atlas fixture"
+node converters/texture-atlas.js "$OUT/a.png" "$OUT/b.png" "$OUT/c.png" --out "$OUT/atlas.png" --padding 2 >/dev/null
+[ -s "$OUT/atlas.png" ] || fail "atlas missing"
+[ -s "$OUT/atlas.json" ] || fail "atlas json missing"
+node -e "
+const fs = require('fs');
+const j = JSON.parse(fs.readFileSync('$OUT/atlas.json', 'utf8'));
+// 3 inputs, cell 16, cols 2, pad 2 → 38x38; c.png sits in cell (0,1) at pixel (2,20)
+if (j.width !== 38 || j.height !== 38) throw new Error('atlas size ' + j.width + 'x' + j.height);
+const c = j.tiles['c.png'];
+if (!c || c.x !== 2 || c.y !== 20 || c.w !== 8 || c.h !== 8) throw new Error('c tile ' + JSON.stringify(c));
+if (Math.abs(c.u - 2/38) > 1e-9 || Math.abs(c.v - (38-20-8)/38) > 1e-9) throw new Error('c uv ' + JSON.stringify(c));
+console.log('atlas grid exact');
+" || fail "atlas grid"
+pass "atlas packs with exact offsets"
 
 echo "--- 5. scene tools ---"
 node converters/material-normalize.js "$OUT/cube.glb" --out "$OUT/cube.mat.glb" >/dev/null

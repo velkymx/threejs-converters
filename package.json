@@ -25,6 +25,7 @@
     "minecraft": "node converters/minecraft-to-glb.js",
     "usdz": "node converters/usdz-export.js",
     "draco": "node converters/draco-compress.js",
+    "atlas": "node converters/texture-atlas.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
