@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "bash examples/ci.sh",
+    "coverage": "c8 npm test",
     "download": "node converters/download.js",
     "report": "node converters/gltf-report.js",
     "optimize": "node converters/glb-optimize.js",
@@ -34,5 +35,24 @@
     "@gltf-transform/functions": "^4.2.0",
     "sharp": "^0.34.0",
     "three": "^0.185.1"
-  }
+  },
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "devDependencies": {
+    "c8": "^12.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/velkymx/threejs-converters.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/velkymx/threejs-converters/issues"
+  },
+  "homepage": "https://github.com/velkymx/threejs-converters#readme"
 }
