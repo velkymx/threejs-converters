@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -412,6 +412,45 @@ if node converters/usdz-export.js assets/cube.obj --out "$OUT/x.usdz" >/dev/null
   fail "usdz should refuse non-GLB"
 fi
 pass "usdz refuses non-GLB"
+
+echo "--- 15. draco: geometry compresses smaller, stays valid ---"
+node converters/draco-compress.js test-out/real/packed.glb --out "$OUT/packed.drc.glb" >/dev/null
+expect_glb "$OUT/packed.drc.glb"
+node -e "
+const fs = require('fs');
+const a = fs.statSync('test-out/real/packed.glb').size;
+const b = fs.statSync('$OUT/packed.drc.glb').size;
+if (!(b < a)) throw new Error('not smaller: ' + b + ' vs ' + a);
+const buf = fs.readFileSync('$OUT/packed.drc.glb');
+const j = JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8'));
+if (!(j.extensionsUsed || []).includes('KHR_draco_mesh_compression')) throw new Error('no draco extension');
+console.log('draco smaller with extension');
+" || fail "draco output"
+node --input-type=module -e "
+import draco3d from 'draco3dgltf';
+import { readFileSync } from 'node:fs';
+// why: encoding without decoding proves nothing — run the real decoder over the first
+// compressed bufferView and match the face count
+const buf = readFileSync('$OUT/packed.drc.glb');
+const j = JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8'));
+const bin = buf.subarray(20 + buf.readUInt32LE(12) + 8);
+const prim = j.meshes[0].primitives[0];
+const bv = j.bufferViews[prim.extensions['KHR_draco_mesh_compression'].bufferView];
+const bytes = bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength);
+const mod = await draco3d.createDecoderModule();
+const d = new mod.Decoder();
+const db = new mod.DecoderBuffer();
+db.Init(new Int8Array(bytes.buffer, bytes.byteOffset, bytes.length), bytes.length);
+const geo = new mod.Mesh();
+const st = d.DecodeBufferToMesh(db, geo);
+if (!st.ok() || geo.num_faces() !== 15452) throw new Error('decode mismatch: ' + geo.num_faces());
+console.log('draco decodes to 15452 faces');
+" || fail "draco decode roundtrip"
+pass "draco compresses"
+if node converters/draco-compress.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "draco should refuse non-GLB"
+fi
+pass "draco refuses non-GLB"
 
 echo ""
 echo "ALL CI CHECKS PASSED"

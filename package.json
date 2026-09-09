@@ -24,6 +24,7 @@
     "vox": "node converters/vox-to-glb.js",
     "minecraft": "node converters/minecraft-to-glb.js",
     "usdz": "node converters/usdz-export.js",
+    "draco": "node converters/draco-compress.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
@@ -34,6 +35,7 @@
   "dependencies": {
     "@gltf-transform/core": "^4.2.0",
     "@gltf-transform/functions": "^4.2.0",
+    "draco3dgltf": "^1.5.7",
     "sharp": "^0.34.0",
     "three": "^0.185.1"
   },
