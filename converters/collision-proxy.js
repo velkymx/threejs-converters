@@ -41,7 +41,10 @@ const bytes = readFileSync(o.in);
 let json;
 try {
   if (bytes.length < 20) throw new Error('too small');
+  if (bytes.readUInt32LE(0) !== 0x46546c67 || bytes.readUInt32LE(4) !== 2) throw new Error('bad GLB magic/version');
+  if (bytes.readUInt32LE(16) !== 0x4e4f534a) throw new Error('first chunk is not JSON');
   const jsonLen = bytes.readUInt32LE(12);
+  if (bytes.length < 20 + jsonLen) throw new Error('truncated JSON chunk');
   json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
 } catch { console.error(`Cannot read ${o.in} (not a valid .glb).`); process.exit(1); }
 const { accessors: acc = [], meshes = [], nodes = [] } = json;
