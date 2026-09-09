@@ -9,7 +9,7 @@
 
 ## Introduction
 
-glb-split explodes one GLB into many — one file per mesh (`--by mesh`, the default) or one per scene (`--by scene`). Each part is cloned from the source, everything else is detached, and orphans are pruned away. Transforms are kept, so parts stay in world pose and reassemble exactly. It needs the `@gltf-transform` dependencies (`npm install` covers them).
+glb-split explodes one GLB into many: one file per mesh (`--by mesh`, the default) or one per scene (`--by scene`). Each part is cloned from the source, everything else is detached, and orphans are pruned away. Transforms are kept, so parts stay in world pose and reassemble exactly. It needs the `@gltf-transform` dependencies (`npm install` covers them).
 
 You may reach for it when a find busts tri budgets, when a kit should ship as streamable chunks, or when you want a single prop out of a merged file.
 
@@ -47,9 +47,9 @@ node converters/glb-split.js ./assets/level.glb --out-dir ./assets/level-parts -
 
 ## Skinned Splits
 
-Splitting by mesh keeps joints but can separate a skin from bones it references. The tool prints a warning whenever skins are present — always re-check skinned parts with [rig-report](rig-report.md) before shipping them.
+Splitting by mesh keeps joints but can separate a skin from bones it references. The tool prints a warning whenever skins are present, so always re-check skinned parts with [rig-report](rig-report.md) before shipping them.
 
 ## See Also
 
-- [glb-merge](glb-merge.md) — the inverse: combine parts into one file.
-- [budget-gate](budget-gate.md) — gate each part against tri/draw budgets.
+- [glb-merge](glb-merge.md): the inverse, combine parts into one file.
+- [budget-gate](budget-gate.md): gate each part against tri/draw budgets.

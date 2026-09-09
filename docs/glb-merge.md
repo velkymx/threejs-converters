@@ -9,7 +9,7 @@
 
 ## Introduction
 
-glb-merge concatenates two or more GLB/GLTF files into a single GLB — one download, one `GLTFLoader` call, fewer draws. Scenes, meshes, materials, and animations from every input are carried over, compatible primitives are fused with `join`, and the result is deduplicated and pruned. It needs the `@gltf-transform` dependencies (`npm install` covers them).
+glb-merge concatenates two or more GLB/GLTF files into a single GLB: one download, one `GLTFLoader` call, fewer draws. Scenes, meshes, materials, and animations from every input are carried over, compatible primitives are fused with `join`, and the result is deduplicated and pruned. It needs the `@gltf-transform` dependencies (`npm install` covers them).
 
 ## Usage
 
@@ -30,7 +30,7 @@ At least two inputs are required.
 What runs by default: merge every input → `join()` compatible primitives (split by material automatically, so nothing visually changes) → `dedup()` + `prune()` → `unpartition()` so the GLB holds exactly one buffer.
 
 > [!NOTE]
-> Skins and skeletons merge as-is. There is no skeleton retargeting — merging two rigged characters gives you two skeletons in one file, which is correct but rarely what you want. Verify skinned merges with [rig-report](rig-report.md).
+> Skins and skeletons merge as-is. There is no skeleton retargeting, so merging two rigged characters gives you two skeletons in one file, which is correct but rarely what you want. Verify skinned merges with [rig-report](rig-report.md).
 
 ## Examples
 
@@ -52,6 +52,6 @@ Scales are kept as-authored: merging a millimeter prop with a meter prop keeps b
 
 ## See Also
 
-- [glb-split](glb-split.md) — the inverse: explode one GLB into parts.
-- [gltf-report](gltf-report.md) — confirm draws and size after merging.
-- [budget-gate](budget-gate.md) — enforce draw/tri budgets on the merge in CI.
+- [glb-split](glb-split.md): the inverse, explode one GLB into parts.
+- [gltf-report](gltf-report.md): confirm draws and size after merging.
+- [budget-gate](budget-gate.md): enforce draw/tri budgets on the merge in CI.
