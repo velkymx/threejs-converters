@@ -13,7 +13,7 @@
 
 texture-convert turns any raster find into capped, typed, correctly-encoded game textures. It magic-sniffs inputs (never trusts extensions), auto-detects color vs. normal vs. data from filenames, resizes to budget, encodes to WebP/AVIF/PNG/JPG, and prints three.js loader lines with `--snippet`. It needs `sharp` (`npm install` covers it), plus built-in zero-dependency decoders for TGA, BMP, and HDR.
 
-Outputs are named `{stem}.{cap}.{srgb|linear}.{ext}` so type and size stay visible, e.g. `albedo.2048.srgb.webp`. Same-stem inputs never overwrite each other — collisions get a `-2` suffix.
+Outputs are named `{stem}.{cap}.{srgb|linear}.{ext}` so type and size stay visible, e.g. `albedo.2048.srgb.webp`. Same-stem inputs never overwrite each other. Collisions get a `-2` suffix.
 
 ## Usage
 
@@ -29,15 +29,15 @@ Batch as many inputs as you like. `--out` (exact path) is only valid for a singl
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
-| `--out` | — | Exact output path (single input only). |
-| `--out-dir` | — | Output directory, created if missing. |
+| `--out` | none | Exact output path (single input only). |
+| `--out-dir` | none | Output directory, created if missing. |
 | `--size` | `2048` | Max side for color textures. Aspect is always kept. |
 | `--data-size` | `1024` | Max side for normal/data/env textures. |
 | `--format` | `webp` | Output encoding: `webp\|avif\|png\|jpg`. |
-| `--quality` | auto | Override quality. Defaults: normal 95, color 82, data 90. |
+| `--quality` | auto (1..100) | Override quality. Defaults: normal 95, color 82, data 90. |
 | `--type` | auto | Force `color\|normal\|data\|env` for every input. |
 | `--linear` | off | Treat unflagged inputs as data (linear) instead of color. |
-| `--flip-y` | off | Flip vertically — converts DirectX normals to OpenGL. |
+| `--flip-y` | off | Flip vertically. Converts DirectX normals to OpenGL. |
 | `--lossless` | off | Lossless WebP/PNG (quality 100). |
 | `--tonemap` | off | Exposure for tonemapping HDR to LDR. Without it, HDR stays float `.hdr`. |
 | `--snippet` | off | Print three.js loader lines with correct `colorSpace` per file. |
@@ -57,17 +57,18 @@ Filenames decide the type unless `--type` or `--linear` overrides:
 
 - **sharp-native:** png, jpg, webp, avif, tiff, gif (first frame), svg (rasterized).
 - **Built-in decoders:** TGA 24/32-bit raw + RLE, BMP 24/32-bit uncompressed, HDR/RGBE flat + RLE.
-- **Refused with a path forward:** DDS and KTX (GPU-block data — needs `toktx` or Blender → PNG), EXR (needs OpenEXR — Blender → PNG/HDR). RLE-compressed BMP, 16-bit TGA, and old-RLE HDR are likewise refused with the reason printed.
+- **Refused with a path forward:** DDS and KTX (GPU-block data; needs `toktx` or Blender → PNG), EXR (needs OpenEXR; Blender → PNG/HDR). RLE-compressed BMP, 16-bit TGA, and old-RLE HDR are likewise refused with the reason printed.
 
 > [!NOTE]
 > KTX2 output is intentionally out of scope: it needs the `toktx` binary, which is not pure Node. Ship WebP — `GLTFLoader` reads it built-in.
 
 ## Safety Rules
 
-- **Alpha + JPEG is refused** (JPEG has no alpha channel) — falls back to WebP.
-- **Normals are never JPEG** — lossy chroma destroys tangent data. Requesting `--format jpg` for a normal map prints the refusal and uses WebP.
-- **JPEG-sourced normals warn** — prefer a PNG source when you can.
+- **Alpha + JPEG is refused** (JPEG has no alpha channel). Falls back to WebP.
+- **Normals are never JPEG**. Lossy chroma destroys tangent data. Requesting `--format jpg` for a normal map prints the refusal and uses WebP.
+- **JPEG-sourced normals warn**. Prefer a PNG source when you can.
 - **HDR stays float `.hdr`** (env-ready, resized to `--data-size`) unless `--tonemap` converts it to LDR.
+- **Files over 100MB are refused** before decoding. Downscale upstream first.
 - Every run ends with a **total VRAM estimate** (~W×H×4 per texture); totals over 512MB warn.
 
 ## Examples
@@ -101,5 +102,5 @@ node converters/texture-convert.js fixture_u.tga fixture_albedo.bmp fixture_stud
 
 ## See Also
 
-- [glb-optimize](glb-optimize.md) — its texture stage uses the same WebP defaults.
-- [budget-gate](budget-gate.md) — gate total file weight in CI.
+- [glb-optimize](glb-optimize.md): its texture stage uses the same WebP defaults.
+- [budget-gate](budget-gate.md): gate total file weight in CI.
