@@ -5,7 +5,7 @@
 //   in world pose); skins kept only if their joints survive — skinned splits print a warning.
 // Usage: node converters/glb-split.js <in.glb> [--out-dir splits] [--by mesh|scene]
 // Deps: @gltf-transform/core @gltf-transform/functions (npm i)
-import { mkdirSync, writeFileSync, statSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { cloneDocument, prune } from '@gltf-transform/functions';
@@ -32,6 +32,13 @@ for (let i = 0; i < args.length; i++) {
 }
 if (!o.in) { console.error('Missing input.'); process.exit(1); }
 if (!existsSync(o.in)) { console.error(`No such file: ${o.in}`); process.exit(1); }
+if (o.in.toLowerCase().endsWith('.glb')) {
+  const b = readFileSync(o.in);
+  if (b.length < 12 || b.readUInt32LE(0) !== 0x46546c67 || b.readUInt32LE(4) !== 2) {
+    console.error(`Not a GLB file: ${o.in} (bad magic or version).`);
+    process.exit(1);
+  }
+}
 if (!['mesh', 'scene'].includes(o.by)) { console.error('Bad --by (want mesh|scene).'); process.exit(1); }
 const stem = o.in.split('/').pop().replace(/\.gl(b|tf)$/i, '');
 const safe = (s) => (s || 'part').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 48);
