@@ -108,6 +108,10 @@ node converters/budget-gate.js ./assets/level.glb   # CI: exits 1 on breach
 | [download](download.md) | none | Fetch URLs to disk. |
 | [obj-to-glb](obj-to-glb.md) | none | OBJ (+MTL diffuse) → GLB. |
 | [stl-to-glb](stl-to-glb.md) | none | Binary + ASCII STL → GLB. |
+| [ply-to-glb](ply-to-glb.md) | none | ASCII + binary PLY scans → GLB. |
+| [dae-to-glb](dae-to-glb.md) | three | COLLADA → GLB, best-effort. |
+| [3ds-to-glb](3ds-to-glb.md) | three | Legacy 3DS geometry → GLB. |
+| [gltf-pack](gltf-pack.md) | none | Split .gltf + sidecars → one GLB. |
 | [fbx-to-glb](fbx-to-glb.md) | three | FBX → GLB, best-effort. |
 | [glb-merge](glb-merge.md) | gltf-transform | N GLBs → one GLB. |
 | [glb-split](glb-split.md) | gltf-transform | One GLB → N GLBs. |
