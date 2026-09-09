@@ -1,5 +1,7 @@
 # threejs-converters
 
+[![CI](https://github.com/velkymx/threejs-converters/actions/workflows/ci.yml/badge.svg)](https://github.com/velkymx/threejs-converters/actions/workflows/ci.yml)
+
 One file per converter. Node only. Internet finds → ingame-ready three.js assets.
 
 Each script in `converters/` is standalone: `node converters/<tool>.js --help`.
