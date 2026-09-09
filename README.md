@@ -84,6 +84,16 @@ Then `glb-optimize.js` + `gltf-report.js` as usual. (`.blend` files can't be rea
 | `material-normalize.js` | gltf-transform | spec/gloss → metal/rough, unlit → lit, doubleside off (unless `--keep-double`), BLEND→OPAQUE when alpha=1, clamp factors, dedup identical materials. |
 | `budget-gate.js` | none | CI PASS/FAIL (exit 1): `--max-tris 100000` `--max-draws 50` `--max-mats 16` `--max-mb 8` `--max-images 8` `--min-size`/`--max-size`. Each fail prints the fix tool. |
 
+## Docs
+
+Full guides, one page per tool:
+
+- [Overview](https://github.com/velkymx/threejs-converters/blob/main/docs/index.md) — install, conventions, budgets, pipelines
+- Ingest: [download](https://github.com/velkymx/threejs-converters/blob/main/docs/download.md) · [obj-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/obj-to-glb.md) · [stl-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/stl-to-glb.md) · [fbx-to-glb](https://github.com/velkymx/threejs-converters/blob/main/docs/fbx-to-glb.md)
+- Scene: [glb-merge](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-merge.md) · [glb-split](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-split.md) · [anim-trim](https://github.com/velkymx/threejs-converters/blob/main/docs/anim-trim.md) · [collision-proxy](https://github.com/velkymx/threejs-converters/blob/main/docs/collision-proxy.md)
+- Polish: [glb-optimize](https://github.com/velkymx/threejs-converters/blob/main/docs/glb-optimize.md) · [material-normalize](https://github.com/velkymx/threejs-converters/blob/main/docs/material-normalize.md) · [texture-convert](https://github.com/velkymx/threejs-converters/blob/main/docs/texture-convert.md)
+- Gate: [gltf-report](https://github.com/velkymx/threejs-converters/blob/main/docs/gltf-report.md) · [rig-report](https://github.com/velkymx/threejs-converters/blob/main/docs/rig-report.md) · [rig-normalize](https://github.com/velkymx/threejs-converters/blob/main/docs/rig-normalize.md) · [budget-gate](https://github.com/velkymx/threejs-converters/blob/main/docs/budget-gate.md)
+
 ## Scale flags (model converters)
 
 `--units mm|cm|m|km|in|ft|yd` · `--scale FACTOR` · `--target-max M` · `--target-height M`
