@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="mat-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse><color>0.8 0.2 0.2 1</color></diffuse>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="mat" name="mat"><instance_effect url="#mat-fx"/></material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="tri-geo" name="tri">
+      <mesh>
+        <source id="tri-pos">
+          <float_array id="tri-pos-arr" count="9">0 0 0 1 0 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#tri-pos-arr" count="3" stride="3">
+              <param name="X" type="float"/><param name="Y" type="float"/><param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="tri-verts">
+          <input semantic="POSITION" source="#tri-pos"/>
+        </vertices>
+        <triangles count="1" material="mat-tri">
+          <input semantic="VERTEX" source="#tri-verts" offset="0"/>
+          <p>0 1 2</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="scene" name="scene">
+      <node id="tri-node" name="tri" type="NODE">
+        <instance_geometry url="#tri-geo">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="mat-tri" target="#mat"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#scene"/>
+  </scene>
+</COLLADA>
