@@ -27,6 +27,7 @@
     "draco": "node converters/draco-compress.js",
     "atlas": "node converters/texture-atlas.js",
     "cubemap": "node converters/hdr-to-cubemap.js",
+    "svg": "node converters/svg-to-glb.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",
@@ -38,8 +39,8 @@
     "@gltf-transform/core": "^4.2.0",
     "@gltf-transform/functions": "^4.2.0",
     "draco3dgltf": "^1.5.7",
-    "sharp": "^0.34.0",
-    "three": "^0.185.1"
+    "sharp": "^0.35.0",
+    "three": "^0.186"
   },
   "main": "index.js",
   "directories": {

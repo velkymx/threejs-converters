@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -164,6 +164,24 @@ const mean = async (f) => (await sharp(f).stats()).channels.slice(0, 3).map(c =>
 node converters/hdr-to-cubemap.js "$OUT/red.hdr" --out-dir "$OUT/cubehdr" --size 8 >/dev/null
 [ -s "$OUT/cubehdr/px.png" ] || fail "hdr branch faces"
 pass "cubemap remaps"
+
+echo "--- 4d. svg: paths extrude to meshes, fills become materials ---"
+node --input-type=module -e "
+import { writeFileSync } from 'node:fs';
+// why: viewBox-only svg (no width/height) plus two fills proves coordinate handling and grouping
+writeFileSync('$OUT/logo.svg', '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 60\">' +
+  '<rect x=\"10\" y=\"10\" width=\"30\" height=\"40\" fill=\"#ff0000\"/>' +
+  '<circle cx=\"70\" cy=\"30\" r=\"20\" fill=\"#0000ff\"/></svg>');
+" || fail "svg fixture"
+node converters/svg-to-glb.js "$OUT/logo.svg" --out "$OUT/logo.glb" --target-max 1 >/dev/null 2>&1
+expect_glb "$OUT/logo.glb"
+node converters/gltf-report.js "$OUT/logo.glb" | grep -q "materials 2 |" || fail "svg fill materials"
+node converters/gltf-report.js "$OUT/logo.glb" | grep -q "max 1.000m" || fail "svg scale"
+pass "svg extrudes"
+if node converters/svg-to-glb.js assets/cube.obj --out "$OUT/x.glb" >/dev/null 2>&1; then
+  fail "svg should refuse non-SVG"
+fi
+pass "svg refuses non-SVG"
 
 echo "--- 5. scene tools ---"
 node converters/material-normalize.js "$OUT/cube.glb" --out "$OUT/cube.mat.glb" >/dev/null
