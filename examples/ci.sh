@@ -11,21 +11,40 @@ pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1"; exit 1; }
 expect_file() { [ -s "$1" ] || fail "missing output: $1"; pass "$1"; }
 
-echo "--- 0. --help smoke (all 15 tools exit 0) ---"
-for t in download obj-to-glb stl-to-glb fbx-to-glb glb-merge glb-split anim-trim \
+echo "--- 0. --help smoke (all 19 tools exit 0) ---"
+for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
   collision-proxy glb-optimize material-normalize texture-convert \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
 pass "all --help"
 
-echo "--- 1. ingest: obj / stl / fbx ---"
+echo "--- 1. ingest: obj / stl / fbx / ply / dae / 3ds / pack ---"
 node converters/obj-to-glb.js assets/cube.obj --out "$OUT/cube.glb" >/dev/null
 expect_file "$OUT/cube.glb"
 node converters/stl-to-glb.js assets/cube-mm.stl --out "$OUT/stl-cube.glb" --target-max 0.2 >/dev/null
 expect_file "$OUT/stl-cube.glb"
 node converters/fbx-to-glb.js "assets/Samba%20Dancing.fbx" --out "$OUT/samba.glb" --units cm --target-height 1.7 >/dev/null 2>&1
 expect_file "$OUT/samba.glb"
+node converters/ply-to-glb.js assets/tri.ply --out "$OUT/tri-ply.glb" >/dev/null
+expect_file "$OUT/tri-ply.glb"
+node converters/dae-to-glb.js assets/tri.dae --out "$OUT/tri-dae.glb" --target-max 2 >/dev/null 2>&1
+expect_file "$OUT/tri-dae.glb"
+node converters/3ds-to-glb.js assets/tri.3ds --out "$OUT/tri-3ds.glb" --units mm --target-max 0.2 >/dev/null 2>&1
+expect_file "$OUT/tri-3ds.glb"
+node converters/gltf-report.js "$OUT/tri-ply.glb" | grep -q "tris 1" || fail "ply tri count"
+node converters/gltf-report.js "$OUT/tri-dae.glb" | grep -q "tris 1" || fail "dae tri count"
+node converters/gltf-report.js "$OUT/tri-3ds.glb" | grep -q "tris 2" || fail "3ds tri count"
+pass "ply + dae + 3ds tri counts"
+mkdir -p "$OUT/pack"
+node --input-type=module -e "
+import { NodeIO } from '@gltf-transform/core';
+await new NodeIO().write('$OUT/pack/cube.gltf', await new NodeIO().read('$OUT/cube.glb'));
+" || fail "split .gltf fixture"
+node converters/gltf-pack.js "$OUT/pack/cube.gltf" --out "$OUT/packed.glb" >/dev/null
+expect_file "$OUT/packed.glb"
+node converters/gltf-report.js "$OUT/packed.glb" | grep -q "tris 2" || fail "packed tri count"
+pass "gltf-pack roundtrip"
 
 echo "--- 2. rig: hostile must flag, normalized must pass ---"
 node examples/make-bad-rig.mjs "$OUT/bad-rig.glb" >/dev/null
