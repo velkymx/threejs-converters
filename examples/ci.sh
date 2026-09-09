@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb \
+  collision-proxy glb-optimize material-normalize texture-convert pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -397,6 +397,21 @@ node converters/minecraft-to-glb.js "$OUT/orphan.json" --parent-dir "$OUT/empty-
 grep -q "Unresolvable parent" "$OUT/refuse.log" || fail "mc refusal hid cause"
 pass "mc refuses orphan with cause"
 pass "mc converts, parents, uvs"
+
+echo "--- 14. usdz: GLB exports to Apple AR Quick Look ---"
+node converters/usdz-export.js "$OUT/cube.glb" --out "$OUT/cube.usdz" >/dev/null
+expect_file "$OUT/cube.usdz"
+node -e "
+const fs = require('fs');
+const b = fs.readFileSync('$OUT/cube.usdz');
+if (b.readUInt32LE(0) !== 0x04034b50) throw new Error('not a zip');
+" || fail "usdz zip magic"
+node converters/pk3-to-dir.js "$OUT/cube.usdz" --out-dir "$OUT/usdz" --list | grep -q ".usda" || fail "usdz lacks usda"
+pass "usdz exports AR package"
+if node converters/usdz-export.js assets/cube.obj --out "$OUT/x.usdz" >/dev/null 2>&1; then
+  fail "usdz should refuse non-GLB"
+fi
+pass "usdz refuses non-GLB"
 
 echo ""
 echo "ALL CI CHECKS PASSED"
