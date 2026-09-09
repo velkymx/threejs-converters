@@ -7,7 +7,7 @@ import { createWriteStream, mkdirSync, existsSync, statSync } from 'node:fs';
 import { get } from 'node:https';
 import { get as httpGet } from 'node:http';
 import { pipeline } from 'node:stream/promises';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -70,14 +70,16 @@ function fetchToFile(url, dest, timeout, redirects = 5) {
 
 const { urls, out, outDir, timeout, force } = parseArgs(args);
 if (urls.length === 0) { console.error('No URLs given.'); process.exit(1); }
-if (out && urls.length > 1) { console.error('--out only valid for single URL. Use --out-dir.'); process.exit(1); }
+  if (out && urls.length > 1) { console.error('--out only valid for single URL. Use --out-dir.'); process.exit(1); }
+  if (!Number.isFinite(timeout) || timeout <= 0) { console.error('Bad --timeout (want positive ms).'); process.exit(1); }
 
-mkdirSync(resolve(outDir), { recursive: true });
 for (const url of urls) {
   let dest;
   try { dest = out ?? join(outDir, basename(new URL(url).pathname) || 'asset.bin'); }
   catch { console.error(`Bad URL: ${url}`); process.exitCode = 1; continue; }
   dest = resolve(dest);
+  try { mkdirSync(dirname(dest), { recursive: true }); }
+  catch { console.error(`Cannot write to ${dest} (bad path).`); process.exitCode = 1; continue; }
   if (existsSync(dest) && !force) {
     console.log(`Skip exists (${(statSync(dest).size / 1024).toFixed(1)} KB): ${dest}  (use --force)`);
     continue;
