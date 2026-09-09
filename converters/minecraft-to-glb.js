@@ -88,8 +88,11 @@ const chain = [];
     const j = loadJson(cur);
     chain.unshift(j);
     if (!j.parent) break;
+    // why strip namespace: vanilla parents are namespaced ("minecraft:block/cube") but live
+    // as plain relative paths; without this every real Mojang model refuses to resolve
+    const parentPath = String(j.parent).replace(/^[a-z0-9_.-]+:/i, '');
     const base = o.parentDir ? resolve(o.parentDir) : dirname(cur);
-    cur = join(base, `${j.parent}.json`);
+    cur = join(base, `${parentPath}.json`);
     if (!existsSync(cur)) {
       console.error(`Unresolvable parent '${j.parent}' (want ${cur}). Flatten in Blockbench or pass --parent-dir.`);
       process.exit(1);
@@ -108,9 +111,11 @@ const num = (v, what) => { if (!Number.isFinite(v)) { console.error(`Bad number 
 const buckets = new Map();
 const matOf = (ref) => {
   if (typeof ref !== 'string' || !ref.startsWith('#')) return 'mc-missing';
-  const t = textures[ref.slice(1)];
-  if (!t) { console.log(`Warn: texture var '${ref}' undefined — faces fall back to 'mc-missing'.`); return 'mc-missing'; }
-  return basename(String(t)).replace(/\.[a-z0-9]+$/i, '') || 'mc-missing';
+  // why loop: vanilla texture values are often vars themselves ("down" -> "#all" -> path)
+  let t = textures[ref.slice(1)], hops = 0;
+  while (typeof t === 'string' && t.startsWith('#') && hops++ < 8) t = textures[t.slice(1)];
+  if (!t || typeof t !== 'string') { console.log(`Warn: texture var '${ref}' undefined — faces fall back to 'mc-missing'.`); return 'mc-missing'; }
+  return basename(t).replace(/\.[a-z0-9]+$/i, '') || 'mc-missing';
 };
 const bucket = (m) => {
   if (!buckets.has(m)) buckets.set(m, { pos: [], nor: [], uv: [], idx: [], n: 0 });

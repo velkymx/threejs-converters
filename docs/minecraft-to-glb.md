@@ -47,7 +47,7 @@ UVs follow viewer-outside geometry per face: u runs screen-right, v runs screen-
 
 ## Parents
 
-`parent` chains resolve to `<parent-dir>/<name>.json` up to 8 deep with cycle detection. Child textures and elements override ancestors. An unresolvable parent exits 1 naming the expected path.
+`parent` chains resolve to `<parent-dir>/<name>.json` up to 8 deep with cycle detection. Namespace prefixes (`minecraft:block/cube`) are stripped, and nested texture vars (`#down` to `#all` to path) resolve fully. Child textures and elements override ancestors. An unresolvable parent exits 1 naming the expected path.
 
 ## Limits
 
