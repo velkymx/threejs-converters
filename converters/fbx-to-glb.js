@@ -78,6 +78,13 @@ const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter
 let fbx;
 try {
   const data = readFileSync(o.in);
+  const head = data.subarray(0, 64).toString('binary');
+  const isBin = head.startsWith('Kaydara FBX Binary');
+  const isAscii = /FBXHeaderExtension|; FBX /.test(data.subarray(0, 4096).toString('utf8'));
+  if (!isBin && !isAscii) {
+    console.error('Not FBX: no Kaydara magic or ASCII header. For OBJ use obj-to-glb.js, for DAE use dae-to-glb.js.');
+    process.exit(1);
+  }
   fbx = new FBXLoader().parse(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength), resolve(o.in));
 } catch (e) { console.error(`FBX parse failed: ${e.message}\nFallback: Blender → Export glTF (.glb) → glb-optimize.js`); process.exit(1); }
 
