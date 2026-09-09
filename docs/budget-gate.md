@@ -39,14 +39,14 @@ World size uses the same full-transform bbox math as `gltf-report`. Quantized po
 
 ```bash
 node converters/budget-gate.js ./assets/chair.opt.glb
-# PASS ./assets/chair.opt.glb — tris 2400 draws 2 mats 1 imgs 0 0.04MB size 2.00m
+# PASS ./assets/chair.opt.glb, tris 2400 draws 2 mats 1 imgs 0 0.04MB size 2.00m
 ```
 
 A breach names the fix for each line:
 
 ```bash
 node converters/budget-gate.js ./assets/samba.glb --max-mb 4
-# FAIL ./assets/samba.glb — tris 55320 draws 2 mats 2 imgs 0 9.49MB size 1.83m
+# FAIL ./assets/samba.glb, tris 55320 draws 2 mats 2 imgs 0 9.49MB size 1.83m
 #  - file 9.5MB > 4MB (texture-convert webp, glb-optimize)
 ```
 

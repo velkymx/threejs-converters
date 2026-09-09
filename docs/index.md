@@ -13,6 +13,7 @@
     - [Level / Ship-Ready Character](#level--ship-ready-character)
     - [Deliver (Web, Mobile, AR)](#deliver-web-mobile-ar)
 - [Tool Map](#tool-map)
+- [Known Limits](#known-limits)
 - [Examples](#examples)
 
 ## Introduction
@@ -160,6 +161,47 @@ node converters/material-cost.js ./assets/helmet.glb
 | [rig-report](rig-report.md) | none | Skeleton audit. |
 | [rig-normalize](rig-normalize.md) | gltf-transform | Skeleton fixes. |
 | [budget-gate](budget-gate.md) | none | CI PASS/FAIL over budgets. |
+
+## Known Limits
+
+Every tool refuses what it cannot do instead of writing a corrupt file. The load-bearing limits, all verified:
+
+| Tool | Limit |
+| ---- | ----- |
+| [download](download.md) | Needs network. Skips existing files unless `--force`. |
+| [obj-to-glb](obj-to-glb.md) | One mesh, one material. MTL diffuse color only; MTL textures never embedded. |
+| [stl-to-glb](stl-to-glb.md) | Never has UVs. Flat shading unless `--smooth`. |
+| [ply-to-glb](ply-to-glb.md) | Needs faces; point clouds and splats refused. Exotic list elements refused. |
+| [dae-to-glb](dae-to-glb.md) | Best-effort. Textures stripped headless. Exotic COLLADA extensions fall back to the Blender path. |
+| [3ds-to-glb](3ds-to-glb.md) | Geometry only. No rigs, no anims, textures stripped. |
+| [gltf-pack](gltf-pack.md) | glTF 2.x only. Remote URIs refused. 4 GB cap. |
+| [fbx-to-glb](fbx-to-glb.md) | Textures stripped headless. Complex rigs go through Blender. |
+| [svg-to-glb](svg-to-glb.md) | Filled shapes only; strokes skip. Gradients and filters are loader best-effort. |
+| [font-to-glb](font-to-glb.md) | Bundled helvetiker covers Latin; missing glyphs render as tofu with a warning. One material total. |
+| [3mf-to-glb](3mf-to-glb.md) | Geometry focus; textures stripped. Beam-lattice extensions best-effort. |
+| [exr-to-hdr](exr-to-hdr.md) | Decodes to RGBE `.hdr`; chain into texture-convert for game textures. 100 MB cap. |
+| [pk3-to-dir](pk3-to-dir.md) | Stored/deflate entries only. Encrypted, descriptor, and multi-disk archives refused. Traversal paths skipped. Empty output exits 1. |
+| [md3-to-glb](md3-to-glb.md) | One frame per export. Tags skipped. `.shader` scripts never parsed. |
+| [vox-to-glb](vox-to-glb.md) | Versions 150/200 only. Node-less files mesh directly without transforms. |
+| [md2-to-glb](md2-to-glb.md) | Static poses only; morph clips dropped. Skins ignored entirely. |
+| [minecraft-to-glb](minecraft-to-glb.md) | Textures stay references (convert PNGs separately). Cullface, shade, AO, display, rescale, groups, and non-cubes ignored. |
+| [usdz-export](usdz-export.md) | three | GLB → Apple AR Quick Look USDZ. Texture maps stripped (no headless canvas raster). |
+| [draco-compress](draco-compress.md) | Lossy through quantization. Runtime needs DRACOLoader. |
+| [glb-merge](glb-merge.md) | No skeleton retargeting. Mixed input units stay mixed. |
+| [glb-split](glb-split.md) | Skinned splits need a rig-report re-check. |
+| [anim-trim](anim-trim.md) | STEP and CUBICSPLINE samplers never thinned. Empty windows exit 1. |
+| [collision-proxy](collision-proxy.md) | AABB boxes only, no hulls. Boxes are world-pose; re-fit rotating bodies at runtime. |
+| [glb-optimize](glb-optimize.md) | Pass `--no-quantize` for viewers without the extension, `--no-compress` to skip textures. |
+| [material-normalize](material-normalize.md) | Only behavior-safe rewrites. Look-changing cuts (clearcoat, transmission) stay human calls. |
+| [texture-convert](texture-convert.md) | DDS/KTX refused (EXR goes through exr-to-hdr). Files over 100 MB refused. No KTX2 output. |
+| [texture-atlas](texture-atlas.md) | Uniform cells (largest input side). Atlases over 4096px warn. |
+| [hdr-to-cubemap](hdr-to-cubemap.md) | HDR tonemaps mildly (Reinhard); LDR clamps. |
+| [gltf-report](gltf-report.md) | Quantized positions unreadable statically; report the pre-quantize file. Min/max-less prims count as partial. |
+| [rig-report](rig-report.md) | Full influence decode needs the `.glb` BIN chunk. Advisory only. |
+| [rig-normalize](rig-normalize.md) | Detached joints are NOT fixed; reparent under the scene root manually. Run before optimize. |
+| [budget-gate](budget-gate.md) | Thresholds are policy, not physics. Size checks skip quantized positions. |
+| [material-cost](material-cost.md) | Relative ranks for triage, not measured milliseconds. Advisory, exit 0. |
+| [lod-generate](lod-generate.md) | Swap distances are the game's call. Re-check skinned output with rig-report. |
 
 ## Examples
 

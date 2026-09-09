@@ -61,7 +61,7 @@ node converters/gltf-report.js ./assets/samba.glb
 #  materials 2 | textures 0 | images 0
 #  world 1.834 x 1.700 x 0.343m (max 1.834m) center [-0.00,0.85,0.00] min.y 0.000
 # Scale: OK (sane meter range, near origin).
-# Verdict: MOBILE-READY — good for games.
+# Verdict: MOBILE-READY, good for games.
 ```
 
 ## See Also

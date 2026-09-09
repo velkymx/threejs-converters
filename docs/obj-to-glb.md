@@ -43,7 +43,7 @@ Convert a centimeter-authored find into a 2-meter grounded prop:
 node converters/obj-to-glb.js ./assets/chair.obj --out ./assets/chair.glb --units cm --target-max 2
 # MTL diffuse Kd → baseColor [0.8,0.6,0.4]
 # Scale: x0.01 offset [0.000,0.000,0.000] (size 1.200 x 2.000 x 1.100m)
-# Wrote assets/chair.glb (48.2 KB) — 2400 tris, 1302 verts, +UVs
+# Wrote assets/chair.glb (48.2 KB), 2400 tris, 1302 verts, +UVs
 ```
 
 ## Limitations

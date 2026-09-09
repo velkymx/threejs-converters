@@ -38,7 +38,7 @@ node converters/3ds-to-glb.js <in.3ds> [--out out.glb] [--units cm] [--scale 1]
 ```bash
 node converters/3ds-to-glb.js ./assets/retro-car.3ds --out ./assets/retro-car.glb --units in --target-max 4
 # BBox raw: 180.000,72.000,60.000 → factor x0.02222222
-# Scene: 12 mesh(es). (3DS rigs/anims do not survive — geometry only.)
+# Scene: 12 mesh(es). (3DS rigs/anims do not survive, geometry only.)
 # Wrote assets/retro-car.glb (210.3 KB)
 ```
 

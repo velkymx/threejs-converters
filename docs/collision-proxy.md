@@ -37,7 +37,7 @@ node converters/collision-proxy.js ./assets/chair.glb --out ./assets/chair.proxy
 # Boxes in ./assets/chair.glb:
 #  - chair: size 0.620 x 0.940 x 0.580m
 #  - SCENE: size 0.620 x 0.940 x 0.580m
-# Wrote ./assets/chair.proxy.glb (1.3 KB) — 2 proxies
+# Wrote ./assets/chair.proxy.glb (1.3 KB), 2 proxies
 # --- three.js snippet ---
 # const proxy = await loader.load('chair.proxy.glb'); proxy.visible = false; scene.add(proxy);
 # // rapier: proxy.updateWorldMatrix(true,true); for each child: size = new Vector3().setFromMatrixScale(child.matrixWorld), pos = child.getWorldPosition() → cuboid(size.x/2,size.y/2,size.z/2) at pos

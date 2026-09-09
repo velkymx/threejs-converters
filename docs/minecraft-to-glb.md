@@ -38,7 +38,7 @@ node converters/minecraft-to-glb.js ./pack/models/block/crate.json --out ./asset
 # Parents: resolved 1 level(s).
 # Scale: x1 offset [-0.500,0.000,-0.500] (size 1.000 x 1.000 x 1.000m)
 #  material 'stone': 12 tris
-# Wrote ./assets/crate.glb (1.9 KB) — 12 tris, 1 material(s)
+# Wrote ./assets/crate.glb (1.9 KB), 12 tris, 1 material(s)
 ```
 
 ## UV mapping

@@ -40,7 +40,7 @@ node converters/md3-to-glb.js ./assets/pak0/models/arena.md3 --out ./assets/aren
 # MD3: 12 frame(s), 2 tag(s), 3 surface(s) → frame 0.
 #  surface 'body': 420 verts, 700 tris → material 'armor'.
 # Scale: x1 offset [...] (size 2.100 x 4.000 x 1.050m)
-# Wrote ./assets/arena.glb (86.4 KB) — 2100 tris, 3 surface(s)
+# Wrote ./assets/arena.glb (86.4 KB), 2100 tris, 3 surface(s)
 ```
 
 ## Skins and Shaders

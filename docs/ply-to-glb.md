@@ -43,7 +43,7 @@ node converters/ply-to-glb.js ./assets/scan.ply --out ./assets/scan.glb --units 
 # PLY binary_little_endian: 48210 verts, 96000 tris, +colors.
 # Scale: x0.001 (--units mm) offset [-0.311,0.000,-0.204] size 2.000 x 1.420 x 1.104m
 # Vertex colors kept as COLOR_0 (base white).
-# Wrote assets/scan.glb (1150.4 KB) — 96000 tris, 48210 verts
+# Wrote assets/scan.glb (1150.4 KB), 96000 tris, 48210 verts
 ```
 
 ## Formats and Limits

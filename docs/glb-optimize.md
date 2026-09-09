@@ -57,7 +57,7 @@ node converters/glb-optimize.js ./assets/chair.glb --out ./assets/chair.opt.glb 
 # BBox raw: min [-1.000,0.000,0.000] max [1.000,2.000,0.000] size [2.000,2.000,0.000]
 # Scale: already normalized (factor 1, offset 0). No wrapper.
 # Compress textures → webp max 2048px…
-# Wrote ./assets/chair.opt.glb (41.3 KB) — 57.0% smaller
+# Wrote ./assets/chair.opt.glb (41.3 KB), 57.0% smaller
 # Load in three.js: GLTFLoader + WebP support is built-in. 1 unit = 1 meter.
 ```
 

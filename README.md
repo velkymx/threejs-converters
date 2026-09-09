@@ -16,7 +16,7 @@ One-file Node converters: OBJ, STL, PLY, DAE, 3DS, MD3, MD2, VOX, FBX, SVG, text
 npm install
 node converters/obj-to-glb.js ./assets/chair.obj --units cm --target-max 2
 node converters/gltf-report.js ./assets/chair.glb
-# Verdict: MOBILE-READY — good for games.
+# Verdict: MOBILE-READY, good for games.
 ```
 
 **The proof.** `bash examples/run-all.sh` runs all 34 converters end to end, and `npm test` asserts every one of them in CI on Node 20 and 22. If a find busts a budget, `budget-gate` fails the build with the exact fix.
@@ -99,6 +99,10 @@ Textures: VRAM is about W×H×4 bytes; total >512MB flagged.
 - **Not a game engine.** No loaders, mixers, or physics bodies. Output plus copy-paste snippets, wired up in your three.js app.
 - **Not a GPU-texture pipeline.** No KTX2/Basis output (`toktx` is a native binary, not pure Node). WebP is the target.
 - **Not FBX-full-fidelity.** Proprietary format, headless loaders: geometry + rig + anims yes, textures no.
+- **Not lossless-by-default.** Draco, quantization, and LODs trade fidelity for bytes. Gate the trade with budget-gate and eyeball the result.
+- **Not an AR studio.** usdz-export ships geometry for Quick Look; texture maps stay behind (no headless canvas raster).
+
+Full per-tool limits live in [Known Limits](https://github.com/velkymx/threejs-converters/blob/main/docs/index.md#known-limits).
 
 ## Comparison
 

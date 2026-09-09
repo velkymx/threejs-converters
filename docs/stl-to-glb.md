@@ -43,7 +43,7 @@ Convert a millimeter print into a 20 cm game prop:
 node converters/stl-to-glb.js ./assets/bracket.stl --out ./assets/bracket.glb --target-max 0.3
 # STL binary: 1240 facets.
 # Scale: x0.001 (--units mm) offset [-0.062,0.000,-0.041] size 0.300 x 0.180 x 0.124m
-# Wrote assets/bracket.glb (24.6 KB) — 1240 tris, 622 verts (flat, no UVs)
+# Wrote assets/bracket.glb (24.6 KB), 1240 tris, 622 verts (flat, no UVs)
 ```
 
 ASCII STL works the same way:

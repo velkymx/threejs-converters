@@ -43,7 +43,7 @@ Run rig-normalize **first**, then [glb-optimize](glb-optimize.md). Quantization 
 
 ```bash
 node converters/rig-normalize.js examples-out/bad-rig.glb --out examples-out/good-rig.glb
-# Wrote examples-out/good-rig.glb — 1 skinned prim(s): 4 verts clamped to 4, 4 renormalized, 1 2nd-set(s) stripped, 1 IBM added.
+# Wrote examples-out/good-rig.glb, 1 skinned prim(s): 4 verts clamped to 4, 4 renormalized, 1 2nd-set(s) stripped, 1 IBM added.
 # Next: node converters/rig-report.js examples-out/good-rig.glb  (expect OK)
 ```
 
