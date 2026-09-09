@@ -32,6 +32,7 @@
     "3mf": "node converters/3mf-to-glb.js",
     "exr": "node converters/exr-to-hdr.js",
     "lod": "node converters/lod-generate.js",
+    "cost": "node converters/material-cost.js",
     "merge": "node converters/glb-merge.js",
     "split": "node converters/glb-split.js",
     "anim": "node converters/anim-trim.js",

@@ -26,7 +26,7 @@ if (!j.meshes?.length) throw new Error('no meshes');
 
 echo "--- 0. --help smoke (all 24 tools exit 0) ---"
 for t in download obj-to-glb stl-to-glb ply-to-glb dae-to-glb 3ds-to-glb gltf-pack fbx-to-glb glb-merge glb-split anim-trim \
-  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr lod-generate pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
+  collision-proxy glb-optimize material-normalize texture-convert texture-atlas hdr-to-cubemap svg-to-glb font-to-glb 3mf-to-glb exr-to-hdr lod-generate material-cost pk3-to-dir md3-to-glb vox-to-glb md2-to-glb minecraft-to-glb usdz-export draco-compress \
   gltf-report rig-report rig-normalize budget-gate; do
   node "converters/$t.js" --help >/dev/null || fail "$t --help"
 done
@@ -340,6 +340,37 @@ if node converters/lod-generate.js "$OUT/samba-loop.glb" --out "$OUT/x.glb" --le
   fail "lod should refuse bad ratio"
 fi
 pass "lod refuses bad ratio"
+
+echo "--- 6c. material-cost: physical features flagged, clean file cheap ---"
+node --input-type=module -e "
+import { Document, NodeIO } from '@gltf-transform/core';
+import { KHRMaterialsTransmission, KHRMaterialsClearcoat, KHRMaterialsSheen, KHRMaterialsIridescence, ALL_EXTENSIONS } from '@gltf-transform/extensions';
+// why: hand-built materials pin the cost rules — one clean standard, one fully loaded physical
+const doc = new Document();
+doc.createBuffer('b');
+const cheap = doc.createMaterial('cheap');
+cheap.setBaseColorFactor([1, 0, 0, 1]); cheap.setRoughnessFactor(0.9); cheap.setMetallicFactor(0);
+const pricey = doc.createMaterial('pricey');
+pricey.setBaseColorFactor([1, 1, 1, 1]);
+pricey.setExtension('KHR_materials_transmission', doc.createExtension(KHRMaterialsTransmission).createTransmission().setTransmissionFactor(0.9));
+pricey.setExtension('KHR_materials_clearcoat', doc.createExtension(KHRMaterialsClearcoat).createClearcoat().setClearcoatFactor(1));
+pricey.setExtension('KHR_materials_sheen', doc.createExtension(KHRMaterialsSheen).createSheen().setSheenColorFactor([1, 0, 0]));
+pricey.setExtension('KHR_materials_iridescence', doc.createExtension(KHRMaterialsIridescence).createIridescence().setIridescenceFactor(0.5));
+const mesh = doc.createMesh('m');
+const prim = doc.createPrimitive();
+const pos = doc.createAccessor('p'); pos.setType('VEC3'); pos.setArray(new Float32Array([0,0,0, 1,0,0, 0,1,0]));
+prim.setAttribute('POSITION', pos); prim.setMaterial(pricey); mesh.addPrimitive(prim);
+const node = doc.createNode('n'); node.setMesh(mesh);
+doc.createScene('s').addChild(node);
+await new NodeIO().registerExtensions(ALL_EXTENSIONS).write('$OUT/costly.glb', doc);
+console.log('cost fixture ok');
+" || fail "cost fixture"
+node converters/material-cost.js "$OUT/costly.glb" | grep -q "EXPENSIVE" || fail "pricey not flagged"
+for feat in transmission clearcoat sheen iridescence; do
+  node converters/material-cost.js "$OUT/costly.glb" | grep -q "$feat" || fail "$feat not named"
+done
+node converters/material-cost.js "$OUT/cube.mat.glb" | grep -q "CHEAP" || fail "standard not cheap"
+pass "material-cost verdicts"
 
 echo "--- 7. README docs links resolve ---"
 node -e "
