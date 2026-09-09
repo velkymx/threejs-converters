@@ -8,7 +8,7 @@
 //   zero/non-uniform joint scale → skew or collapsed skin
 // Usage: node converters/rig-report.js <model.glb> [--json]
 // Note: influence decode needs the .glb BIN chunk; .gltf with external .bin gets JSON-only checks.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 if (!args.length || args.includes('--help') || args.includes('-h')) {
@@ -19,15 +19,22 @@ Fix path: node converters/rig-normalize.js <model.glb> (clamp 4, renormalize, ex
   process.exit(args.length ? 0 : 1);
 }
 const file = args.find((a) => !a.startsWith('--'));
+if (!file) { console.error('Missing input file.'); process.exit(1); }
+if (!existsSync(file)) { console.error(`No such file: ${file}`); process.exit(1); }
 const asJson = args.includes('--json');
-const bytes = readFileSync(file);
+let bytes;
+try { bytes = readFileSync(file); }
+catch { console.error(`Cannot read ${file}.`); process.exit(1); }
 let json, bin = null;
-if (file.endsWith('.glb')) {
-  const jsonLen = bytes.readUInt32LE(12);
-  json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
-  const binOff = 20 + jsonLen;
-  if (bytes.length > binOff + 8) bin = bytes.subarray(binOff + 8, binOff + 8 + bytes.readUInt32LE(binOff));
-} else json = JSON.parse(bytes.toString('utf8'));
+try {
+  if (file.endsWith('.glb')) {
+    if (bytes.length < 20) throw new Error('too small');
+    const jsonLen = bytes.readUInt32LE(12);
+    json = JSON.parse(bytes.subarray(20, 20 + jsonLen).toString('utf8'));
+    const binOff = 20 + jsonLen;
+    if (bytes.length > binOff + 8) bin = bytes.subarray(binOff + 8, binOff + 8 + bytes.readUInt32LE(binOff));
+  } else json = JSON.parse(bytes.toString('utf8'));
+} catch { console.error(`Cannot parse ${file} (not valid glTF/GLB).`); process.exit(1); }
 
 const nodes = json.nodes || [], skins = json.skins || [], accs = json.accessors || [],
   views = json.bufferViews || [], meshes = json.meshes || [], anims = json.animations || [];
