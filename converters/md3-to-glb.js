@@ -6,7 +6,7 @@
 //   by the spec /64 factor with lat/long normal decode; one GLB primitive per surface; sibling
 //   basename.skin (mesh,texture lines) names materials after their texture stem.
 // Usage: node converters/md3-to-glb.js <in.md3> [--out out.glb] [--frame 0]
-//     [--units m|cm|mm|in] [--scale 1] [--target-max 2] [--color #rrggbb] [--metal 0] [--rough 0.9]
+//     [--units mm|cm|m|km|in|ft|yd] [--scale 1] [--target-max 2] [--color #rrggbb] [--metal 0] [--rough 0.9]
 //     [--no-center] [--no-ground]
 // Refusals: bad IDP3 magic, wrong version, truncated structs, out-of-range --frame, missing verts.
 import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
@@ -19,7 +19,7 @@ if (!args.length || args.includes('--help') || args.includes('-h')) {
   console.log(`md3-to-glb.js — Quake 3 MD3 to three.js GLB (frame N as static mesh)
 Usage:
   node converters/md3-to-glb.js <in.md3> [--out out.glb] [--frame 0]
-    [--units m] [--scale 1] [--target-max 2] [--color #rrggbb] [--metal 0] [--rough 0.9]
+    [--units mm|cm|m|km|in|ft|yd] [--scale 1] [--target-max 2] [--color #rrggbb] [--metal 0] [--rough 0.9]
     [--no-center] [--no-ground]
   MD3 stores Quake units; --units converts them, so --units in treats them as inches.
 Example:
