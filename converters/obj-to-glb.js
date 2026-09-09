@@ -56,7 +56,20 @@ function parse(argv) {
 }
 
 const o = parse(args);
-const src = readFileSync(o.in, 'utf8');
+const raw = readFileSync(o.in);
+if (raw.length >= 4 && raw.readUInt32LE(0) === 0x46546c67) {
+  console.error('Not OBJ: GLB magic detected — already converted. Audit with gltf-report.js instead.');
+  process.exit(1);
+}
+if (raw.includes(0)) {
+  console.error('Not OBJ: binary content — OBJ is text. For STL use stl-to-glb.js, for FBX use fbx-to-glb.js.');
+  process.exit(1);
+}
+const src = raw.toString('utf8');
+if (!/^(v|f)\s/m.test(src)) {
+  console.error('Not OBJ: no vertex (v) or face (f) records found.');
+  process.exit(1);
+}
 const P = [], T = [], N = [];
 const vMap = new Map(); // "vi/ti/ni" -> index
 const pos = [], uv = [], nor = [], idx = [];
