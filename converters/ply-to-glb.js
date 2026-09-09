@@ -57,6 +57,10 @@ function parse(argv) {
 
 const o = parse(args);
 const buf = readFileSync(o.in);
+if (buf.length >= 4 && buf.readUInt32LE(0) === 0x46546c67) {
+  console.error('Not PLY: GLB magic detected — already converted. Audit with gltf-report.js instead.');
+  process.exit(1);
+}
 
 // --- header (ASCII prefix, always) ---
 let hEnd = buf.indexOf('end_header');
@@ -92,6 +96,10 @@ if (!faces) {
 }
 const hasXYZ = ['x', 'y', 'z'].every((n) => verts.props.some((p) => p.name === n));
 if (!hasXYZ) { console.error('PLY vertices lack x/y/z.'); process.exit(1); }
+if (faces.count > Math.max(1024, verts.count * 100)) {
+  console.error(`PLY face count insane (${faces.count} faces for ${verts.count} verts) — corrupt header.`);
+  process.exit(1);
+}
 
 // --- body readers ---
 function readScalar(dv, off, type) {
