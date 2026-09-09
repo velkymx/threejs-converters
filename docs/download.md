@@ -22,7 +22,7 @@ node converters/download.js <url...> [--out file] [--out-dir dir] [--timeout ms]
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
-| `--out` | — | Exact output path. Only valid for a single URL. |
+| `--out` | none | Exact output path. Only valid for a single URL. |
 | `--out-dir` | `assets` | Directory for downloads. Created if missing; filenames come from the URL path. |
 | `--timeout` | `30000` | Per-request timeout in milliseconds. |
 | `--force` | off | Re-download even if the destination file already exists. |
@@ -55,5 +55,5 @@ node converters/download.js https://example.com/chair.obj https://example.com/ch
 
 ## See Also
 
-- [obj-to-glb](obj-to-glb.md) — convert the downloaded OBJ next.
-- [fbx-to-glb](fbx-to-glb.md) — convert a downloaded FBX next.
+- [obj-to-glb](obj-to-glb.md): convert the downloaded OBJ next.
+- [fbx-to-glb](fbx-to-glb.md): convert a downloaded FBX next.
